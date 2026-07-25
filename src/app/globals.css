@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Colors - Healthcare Modernist Design System */
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #3e484d;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #6e797e;
+  --color-outline-variant: #bdc8ce;
+  --color-surface-tint: #006780;
+
+  /* Primary - Cyan Blue */
+  --color-primary: #00647c;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #007f9d;
+  --color-on-primary-container: #fafdff;
+  --color-inverse-primary: #6cd3f7;
+  --color-primary-fixed: #b7eaff;
+  --color-primary-fixed-dim: #6cd3f7;
+  --color-on-primary-fixed: #001f28;
+  --color-on-primary-fixed-variant: #004e61;
+
+  /* Secondary - Emerald Green */
+  --color-secondary: #006c49;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005236;
+
+  /* Tertiary - Amber */
+  --color-tertiary: #825100;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #a36700;
+  --color-on-tertiary-container: #fffbff;
+  --color-tertiary-fixed: #ffddb8;
+  --color-tertiary-fixed-dim: #ffb95f;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-tertiary-fixed-variant: #653e00;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Background */
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+  --color-surface-background: #F8FAFC;
+
+  /* Semantic Colors */
+  --color-critical-alert: #EF4444;
+  --color-glucose-optimal: #10B981;
+  --color-glucose-low: #F59E0B;
+  --color-glucose-high: #EF4444;
+
+  /* Typography */
+  --font-display-lg: "Manrope", sans-serif;
+  --font-headline-lg: "Manrope", sans-serif;
+  --font-headline-lg-mobile: "Manrope", sans-serif;
+  --font-headline-md: "Manrope", sans-serif;
+  --font-body-lg: "Atkinson Hyperlegible Next", sans-serif;
+  --font-body-md: "Atkinson Hyperlegible Next", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-label-sm: "Inter", sans-serif;
+
+  /* Font Sizes */
+  --text-display-lg: 48px;
+  --text-headline-lg: 32px;
+  --text-headline-lg-mobile: 28px;
+  --text-headline-md: 24px;
+  --text-body-lg: 18px;
+  --text-body-md: 16px;
+  --text-label-md: 14px;
+  --text-label-sm: 12px;
+
+  /* Line Heights */
+  --leading-display-lg: 56px;
+  --leading-headline-lg: 40px;
+  --leading-headline-lg-mobile: 36px;
+  --leading-headline-md: 32px;
+  --leading-body-lg: 28px;
+  --leading-body-md: 24px;
+  --leading-label-md: 20px;
+  --leading-label-sm: 16px;
+
+  /* Letter Spacing */
+  --tracking-display-lg: -0.02em;
+  --tracking-label-md: 0.01em;
+  --tracking-label-sm: 0.05em;
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-gutter: 24px;
+  --spacing-margin-desktop: 40px;
+  --spacing-container-max: 1280px;
+  --spacing-margin-mobile: 16px;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-on-background);
+  font-family: var(--font-body-md);
+  overflow-x: hidden;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary-fixed);
+  color: var(--color-on-primary-fixed);
+}
