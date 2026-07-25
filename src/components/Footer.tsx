@@ -28,9 +28,10 @@ export default function Footer() {
             <Image
               src="/Glymee_name.png"
               alt="Glymee"
-              width={180}
-              height={48}
-              className="h-11 w-auto mb-4"
+              width={100}
+              height={100}
+              className="h-full scale-110 translate-y-1 w-auto object-contain"
+              priority
             />
             <p className="text-on-surface-variant text-sm">
               Empowering smarter metabolic health management through data and
