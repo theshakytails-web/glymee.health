@@ -1,11 +1,30 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import BookButton from "./BookButton";
 
 export default function HeroSection() {
+  const parallaxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (parallaxRef.current) {
+        const scrolled = window.scrollY;
+        parallaxRef.current.style.transform = `translateY(${scrolled * 0.3}px)`;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden px-6 py-20 bg-surface-container-low">
-      {/* Background radial gradient */}
-      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent" />
+      {/* Parallax background gradient */}
+      <div
+        ref={parallaxRef}
+        className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent will-change-transform"
+      />
 
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
         {/* Left content */}

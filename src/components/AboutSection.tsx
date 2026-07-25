@@ -1,9 +1,6 @@
 import Image from "next/image";
-import { useLanguage } from "@/context/LanguageContext";
 
 export default function AboutSection() {
-  const { t } = useLanguage();
-
   return (
     <section className="py-24 bg-surface px-6 overflow-hidden" id="about">
       <div className="max-w-[1280px] mx-auto flex flex-col lg:flex-row gap-16 items-center">
@@ -17,32 +14,37 @@ export default function AboutSection() {
           />
           <div className="absolute -bottom-6 -right-6 p-6 glass-card rounded-lg shadow-lg max-w-[280px]">
             <p className="font-label-md text-[14px] leading-[20px] tracking-[0.01em] text-primary italic">
-              {t("about.quote")}
+              &ldquo;Founded on clinical excellence and a deep passion for
+              human-centric metabolic health.&rdquo;
             </p>
           </div>
         </div>
         <div className="flex-1 space-y-6">
           <h2 className="font-headline-lg text-[32px] leading-[40px] font-bold text-on-background">
-            {t("about.title")}
+            Our Story
           </h2>
           <p className="font-body-lg text-[18px] leading-[28px] text-on-surface-variant">
-            {t("about.p1")}
+            Glymee was born from a simple observation: modern healthcare manages
+            diabetes, but it doesn&apos;t always empower the patient. Our team of
+            doctors, dietitians, and engineers came together to build a bridge
+            between data and daily living.
           </p>
           <p className="font-body-md text-[16px] leading-[24px] text-on-surface-variant">
-            {t("about.p2")}
+            Based in Pune, India, we serve patients with one mission: to make
+            metabolic health intuitive, accessible, and life-changing.
           </p>
           <div className="pt-4 flex flex-col gap-2">
             <p className="flex items-center gap-3 text-on-surface-variant">
               <span className="material-symbols-outlined text-primary">
                 location_on
               </span>
-              {t("about.location")}
+              Pune, Maharashtra, India
             </p>
             <p className="flex items-center gap-3 text-on-surface-variant">
               <span className="material-symbols-outlined text-primary">
                 mail
               </span>
-              {t("about.email")}
+              hello@glymee.com
             </p>
           </div>
         </div>

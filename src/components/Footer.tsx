@@ -1,28 +1,24 @@
 import Link from "next/link";
-import { useLanguage } from "@/context/LanguageContext";
 
-const footerLinks = {
-  product: [
-    { key: "footer.features", href: "#" },
-    { key: "footer.integrations", href: "#" },
-    { key: "footer.pricing", href: "#" },
-  ],
-  company: [
-    { key: "footer.aboutUs", href: "#about" },
-    { key: "footer.careers", href: "#" },
-    { key: "footer.contact", href: "#" },
-  ],
-};
+const productLinks = [
+  { label: "Features", href: "#" },
+  { label: "Integrations", href: "#" },
+  { label: "Pricing", href: "#" },
+];
+
+const companyLinks = [
+  { label: "About Us", href: "#about" },
+  { label: "Careers", href: "#" },
+  { label: "Contact", href: "#" },
+];
 
 const legalLinks = [
-  { key: "footer.privacy", href: "/privacy" },
-  { key: "footer.terms", href: "/terms" },
-  { key: "footer.accessibility", href: "/accessibility" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Accessibility", href: "/accessibility" },
 ];
 
 export default function Footer() {
-  const { t } = useLanguage();
-
   return (
     <footer className="w-full py-16 px-6 bg-surface-container-low border-t border-outline-variant/10">
       <div className="max-w-[1280px] mx-auto">
@@ -32,22 +28,23 @@ export default function Footer() {
               Glymee
             </span>
             <p className="text-on-surface-variant text-sm">
-              {t("footer.description")}
+              Empowering smarter metabolic health management through data and
+              human connection.
             </p>
           </div>
 
           <div>
             <h4 className="font-headline-md text-sm mb-6 uppercase tracking-wider">
-              {t("footer.product")}
+              Product
             </h4>
             <ul className="space-y-4">
-              {footerLinks.product.map((link) => (
-                <li key={link.key}>
+              {productLinks.map((link) => (
+                <li key={link.label}>
                   <a
                     href={link.href}
                     className="text-on-surface-variant hover:text-primary transition-colors"
                   >
-                    {t(link.key)}
+                    {link.label}
                   </a>
                 </li>
               ))}
@@ -56,16 +53,16 @@ export default function Footer() {
 
           <div>
             <h4 className="font-headline-md text-sm mb-6 uppercase tracking-wider">
-              {t("footer.company")}
+              Company
             </h4>
             <ul className="space-y-4">
-              {footerLinks.company.map((link) => (
-                <li key={link.key}>
+              {companyLinks.map((link) => (
+                <li key={link.label}>
                   <a
                     href={link.href}
                     className="text-on-surface-variant hover:text-primary transition-colors"
                   >
-                    {t(link.key)}
+                    {link.label}
                   </a>
                 </li>
               ))}
@@ -74,26 +71,24 @@ export default function Footer() {
 
           <div>
             <h4 className="font-headline-md text-sm mb-6 uppercase tracking-wider">
-              {t("footer.contactUs")}
+              Contact
             </h4>
-            <p className="text-on-surface-variant text-sm">
-              hello@glymee.com
-            </p>
+            <p className="text-on-surface-variant text-sm">hello@glymee.com</p>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-outline-variant/10 gap-4">
           <p className="font-label-sm text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant">
-            {t("footer.copyright")}
+            &copy; 2024 Glymee Health. All rights reserved.
           </p>
           <div className="flex gap-6">
             {legalLinks.map((link) => (
               <Link
-                key={link.key}
+                key={link.label}
                 href={link.href}
                 className="font-label-sm text-[12px] leading-[16px] tracking-[0.05em] font-semibold text-on-surface-variant hover:text-primary underline"
               >
-                {t(link.key)}
+                {link.label}
               </Link>
             ))}
           </div>

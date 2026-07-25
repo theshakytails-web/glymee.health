@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Glymee | Manage Today. Healthy Tomorrow.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#0b1c30",
+                        "secondary": "#006c49",
+                        "surface-background": "#F8FAFC",
+                        "surface-container": "#e5eeff",
+                        "on-error": "#ffffff",
+                        "on-surface": "#0b1c30",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#00714d",
+                        "tertiary-fixed": "#ffddb8",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "inverse-primary": "#6cd3f7",
+                        "glucose-low": "#F59E0B",
+                        "tertiary": "#825100",
+                        "surface": "#f8f9ff",
+                        "surface-variant": "#d3e4fe",
+                        "primary": "#00647c",
+                        "surface-tint": "#006780",
+                        "background": "#f8f9ff",
+                        "tertiary-container": "#a36700",
+                        "outline": "#6e797e",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#fffbff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#3e484d",
+                        "inverse-surface": "#213145",
+                        "primary-fixed-dim": "#6cd3f7",
+                        "critical-alert": "#EF4444",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary-fixed": "#b7eaff",
+                        "on-primary-container": "#fafdff",
+                        "glucose-optimal": "#10B981",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#001f28",
+                        "surface-container-highest": "#d3e4fe",
+                        "surface-container-low": "#eff4ff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#004e61",
+                        "inverse-on-surface": "#eaf1ff",
+                        "outline-variant": "#bdc8ce",
+                        "glucose-high": "#EF4444",
+                        "secondary-fixed": "#6ffbbe",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-bright": "#f8f9ff",
+                        "on-secondary-fixed": "#002113",
+                        "secondary-container": "#6cf8bb",
+                        "primary-container": "#007f9d",
+                        "on-tertiary-fixed": "#2a1700"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-desktop": "40px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "body-md": ["Atkinson Hyperlegible Next"],
+                        "body-lg": ["Atkinson Hyperlegible Next"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Manrope"],
+                        "headline-lg-mobile": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .parallax-container {
+            perspective: 1px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .parallax-element {
+            transform: translateZ(-1px) scale(2);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto bg-surface/80 backdrop-blur-md shadow-sm">
+<div class="flex items-center gap-8">
+<span class="text-headline-md font-headline-md font-bold text-primary">Glymee</span>
+<div class="hidden md:flex gap-6">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-opacity cursor-pointer" href="#why-glymee">Why Glymee?</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-opacity cursor-pointer" href="#services">Services</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-opacity cursor-pointer" href="#process">Our Process</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-opacity cursor-pointer" href="#faq">FAQ</a>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md text-label-md hover:opacity-80 transition-all active:scale-95 cursor-pointer">
+        Book Consultation
+    </button>
+</nav>
+<main class="pt-16">
+<!-- Hero Section -->
+<section class="relative min-h-[90vh] flex items-center overflow-hidden px-gutter py-20 bg-surface-container-low">
+<div class="absolute inset-0 opacity-10 parallax-element bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent"></div>
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+<div class="space-y-8 reveal active">
+<span class="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-md text-label-md">Manage Today. Healthy Tomorrow.</span>
+<h1 class="font-display-lg text-display-lg md:text-[56px] leading-tight text-on-background">
+                    Stop Guessing. <br/><span class="text-primary">Start Understanding</span> Your Diabetes.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                    We don't just treat blood sugar—we help you understand the "why" behind your numbers for a sustainable, healthy future.
+                </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-lg font-headline-md text-label-md hover:opacity-90 transition-all active:scale-95 shadow-md">
+                        Book Consultation
+                    </button>
+<button class="bg-white border border-primary/20 text-primary px-8 py-4 rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all active:scale-95">
+                        Know How Glymee Works
+                    </button>
+</div>
+</div>
+<div class="relative reveal active delay-200">
+<div class="absolute -top-10 -left-10 w-32 h-32 bg-secondary-container/30 rounded-full blur-3xl animate-pulse"></div>
+<div class="absolute -bottom-10 -right-10 w-48 h-48 bg-primary-fixed/20 rounded-full blur-3xl"></div>
+<div class="relative glass-card p-4 rounded-xl shadow-2xl transition-transform duration-500 hover:scale-[1.02]">
+<img alt="Glymee Diabetes Management Dashboard showing personalized insights and trend analysis" class="w-full rounded-lg aspect-[4/3] object-cover" src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Why Root Cause Matters -->
+<section class="py-24 px-gutter max-w-container-max mx-auto reveal">
+<div class="text-center mb-16 max-w-3xl mx-auto space-y-4">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Why Root Cause Matters</h2>
+<p class="font-body-lg text-on-surface-variant">Treating symptoms only gets you so far. By identifying the root causes of glucose fluctuations—from stress to sleep to gut health—we create lasting change.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant/30 hover:shadow-md transition-all">
+<span class="material-symbols-outlined text-primary text-4xl mb-6" data-icon="biotech">biotech</span>
+<h3 class="font-headline-md text-on-background mb-4">Precision Analysis</h3>
+<p class="text-on-surface-variant">We dive deep into your metabolic profile to find what specifically triggers your spikes.</p>
+</div>
+<div class="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant/30 hover:shadow-md transition-all">
+<span class="material-symbols-outlined text-secondary text-4xl mb-6" data-icon="psychology_alt">psychology_alt</span>
+<h3 class="font-headline-md text-on-background mb-4">Behavioral Science</h3>
+<p class="text-on-surface-variant">Understand the psychological factors influencing your daily health choices and habits.</p>
+</div>
+<div class="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant/30 hover:shadow-md transition-all">
+<span class="material-symbols-outlined text-primary text-4xl mb-6" data-icon="settings_accessibility">settings_accessibility</span>
+<h3 class="font-headline-md text-on-background mb-4">Sustainable Shift</h3>
+<p class="text-on-surface-variant">Replace guesswork with data-backed lifestyle adjustments that stick for life.</p>
+</div>
+</div>
+</section>
+<!-- Why Glymee? Comparison -->
+<section class="py-24 bg-surface-container-low px-gutter" id="why-glymee">
+<div class="max-w-container-max mx-auto reveal">
+<h2 class="font-headline-lg text-headline-lg text-center mb-16">Traditional Care vs. Glymee</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-white p-8 rounded-2xl border border-outline-variant/20 shadow-sm opacity-80">
+<h3 class="font-headline-md text-on-surface-variant mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-error" data-icon="cancel">cancel</span>
+                        Traditional Management
+                    </h3>
+<ul class="space-y-4 text-on-surface-variant">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="circle">circle</span>
+                            Short, hurried doctor appointments
+                        </li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="circle">circle</span>
+                            Focus on "lowering numbers" only
+                        </li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="circle">circle</span>
+                            One-size-fits-all dietary advice
+                        </li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="circle">circle</span>
+                            Disconnected tracking devices
+                        </li>
+</ul>
+</div>
+<div class="bg-primary p-8 rounded-2xl shadow-xl text-on-primary">
+<h3 class="font-headline-md mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container" data-icon="check_circle">check_circle</span>
+                        The Glymee Way
+                    </h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="done_all">done_all</span>
+                            24/7 access to your dedicated care team
+                        </li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="done_all">done_all</span>
+                            Holistic root-cause identification
+                        </li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="done_all">done_all</span>
+                            Personalized nutrition based on CGM data
+                        </li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined mt-1 text-sm" data-icon="done_all">done_all</span>
+                            Unified ecosystem for all health metrics
+                        </li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Conditions We Help Manage -->
+<section class="py-24 px-gutter max-w-container-max mx-auto reveal">
+<h2 class="font-headline-lg text-headline-lg text-center mb-16">Conditions We Help Manage</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="p-6 bg-white rounded-xl text-center border border-outline-variant/30 hover:border-primary transition-colors cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl mb-3" data-icon="bloodtype">bloodtype</span>
+<p class="font-headline-md text-on-background text-lg">Type 2 Diabetes</p>
+</div>
+<div class="p-6 bg-white rounded-xl text-center border border-outline-variant/30 hover:border-primary transition-colors cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl mb-3" data-icon="warning">warning</span>
+<p class="font-headline-md text-on-background text-lg">Prediabetes</p>
+</div>
+<div class="p-6 bg-white rounded-xl text-center border border-outline-variant/30 hover:border-primary transition-colors cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl mb-3" data-icon="pregnant_woman">pregnant_woman</span>
+<p class="font-headline-md text-on-background text-lg">Gestational</p>
+</div>
+<div class="p-6 bg-white rounded-xl text-center border border-outline-variant/30 hover:border-primary transition-colors cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl mb-3" data-icon="speed">speed</span>
+<p class="font-headline-md text-on-background text-lg">Type 1 Support</p>
+</div>
+</div>
+</section>
+<!-- Our Process -->
+<section class="py-24 bg-surface-container-high px-gutter" id="process">
+<div class="max-w-container-max mx-auto reveal">
+<div class="text-center mb-16 space-y-4">
+<h2 class="font-headline-lg text-headline-lg">Our 5-Step Transformation</h2>
+<p class="text-on-surface-variant">A proven path from confusion to complete control.</p>
+</div>
+<div class="relative">
+<div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-primary/20 z-0"></div>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-8 relative z-10">
+<div class="text-center space-y-4">
+<div class="w-24 h-24 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-2xl mx-auto shadow-lg ring-8 ring-white/50">1</div>
+<h4 class="font-headline-md text-lg">Discovery</h4>
+<p class="text-sm text-on-surface-variant">Metabolic health assessment &amp; history review.</p>
+</div>
+<div class="text-center space-y-4">
+<div class="w-24 h-24 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-2xl mx-auto shadow-lg ring-8 ring-white/50">2</div>
+<h4 class="font-headline-md text-lg">Onboarding</h4>
+<p class="text-sm text-on-surface-variant">Device setup &amp; team introduction.</p>
+</div>
+<div class="text-center space-y-4">
+<div class="w-24 h-24 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-2xl mx-auto shadow-lg ring-8 ring-white/50">3</div>
+<h4 class="font-headline-md text-lg">Monitoring</h4>
+<p class="text-sm text-on-surface-variant">14-day intensive data collection phase.</p>
+</div>
+<div class="text-center space-y-4">
+<div class="w-24 h-24 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-2xl mx-auto shadow-lg ring-8 ring-white/50">4</div>
+<h4 class="font-headline-md text-lg">Analysis</h4>
+<p class="text-sm text-on-surface-variant">Identifying root causes &amp; patterns.</p>
+</div>
+<div class="text-center space-y-4">
+<div class="w-24 h-24 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-2xl mx-auto shadow-lg ring-8 ring-white/50">5</div>
+<h4 class="font-headline-md text-lg">Thrive</h4>
+<p class="text-sm text-on-surface-variant">Personalized roadmap for long-term health.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Our Services -->
+<section class="py-24 px-gutter max-w-container-max mx-auto reveal" id="services">
+<h2 class="font-headline-lg text-headline-lg text-center mb-16">Our Services</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="p-8 rounded-2xl bg-white border border-outline-variant shadow-sm hover:shadow-lg transition-all group">
+<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white" data-icon="monitor_heart">monitor_heart</span>
+</div>
+<h3 class="font-headline-md mb-4">CGM Integration</h3>
+<p class="text-on-surface-variant mb-6">Continuous monitoring that speaks to our platform in real-time for instant feedback.</p>
+<button class="text-primary font-label-md flex items-center gap-2 hover:translate-x-1 transition-transform">
+                    Learn More <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<div class="p-8 rounded-2xl bg-white border border-outline-variant shadow-sm hover:shadow-lg transition-all group">
+<div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-6 group-hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined text-secondary group-hover:text-white" data-icon="restaurant">restaurant</span>
+</div>
+<h3 class="font-headline-md mb-4">Nutrition Coaching</h3>
+<p class="text-on-surface-variant mb-6">Personalized meal plans designed around your body's specific glycemic response.</p>
+<button class="text-secondary font-label-md flex items-center gap-2 hover:translate-x-1 transition-transform">
+                    Learn More <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<div class="p-8 rounded-2xl bg-white border border-outline-variant shadow-sm hover:shadow-lg transition-all group">
+<div class="w-12 h-12 bg-tertiary/10 rounded-lg flex items-center justify-center mb-6 group-hover:bg-tertiary transition-colors">
+<span class="material-symbols-outlined text-tertiary group-hover:text-white" data-icon="support_agent">support_agent</span>
+</div>
+<h3 class="font-headline-md mb-4">Clinical Support</h3>
+<p class="text-on-surface-variant mb-6">Expert guidance from licensed endocrinologists whenever you need an adjustment.</p>
+<button class="text-tertiary font-label-md flex items-center gap-2 hover:translate-x-1 transition-transform">
+                    Learn More <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- About Us Section -->
+<section class="py-24 bg-surface px-gutter overflow-hidden reveal" id="about">
+<div class="max-w-container-max mx-auto flex flex-col lg:flex-row gap-16 items-center">
+<div class="flex-1 relative">
+<img alt="Glymee Clinical Team collaborating" class="rounded-2xl shadow-xl w-full aspect-[4/3] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwOhfXAcTjMgbNB5CpiP7GRr_qhWU5-wMEIwKDBzGR6D1vlkPX4l3zd_c77TlrpK7Vix4CGcIHu24GGRK2nBZ8LIIgGhDPve56nE5zg4DQYKhOD7TKLXkfw8kmvmvtEpfjm7pPd7MJjqwgJLQ-hlDfkjh06Gd8Dhf-PcPEdqLjUnDfkHTyk__1nN1AfrQjkzK5_PKQy4VzotitUSoyQBBO8fyeK7uRDCdlXPYuBw8rxC-QobWHovyqB02x-nYKHRUGpuWrOk2Y4Z8"/>
+<div class="absolute -bottom-6 -right-6 p-6 glass-card rounded-lg shadow-lg max-w-[280px]">
+<p class="font-label-md text-label-md text-primary italic">"Founded on clinical excellence and a deep passion for human-centric metabolic health."</p>
+</div>
+</div>
+<div class="flex-1 space-y-6">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Our Story</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Glymee was born from a simple observation: modern healthcare manages diabetes, but it doesn't always empower the patient. Our team of doctors, dietitians, and engineers came together to build a bridge between data and daily living.
+                </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Headquartered in San Francisco, we serve thousands of patients globally with one mission: to make metabolic health intuitive, accessible, and life-changing.
+                </p>
+<div class="pt-4 flex flex-col gap-2">
+<p class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+                        123 Health Ave, Suite 500, San Francisco, CA
+                    </p>
+<p class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" data-icon="mail">mail</span>
+                        hello@glymee.com
+                    </p>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-24 px-gutter max-w-3xl mx-auto reveal" id="faq">
+<h2 class="font-headline-lg text-headline-lg text-center mb-16">Frequently Asked Questions</h2>
+<div class="space-y-4">
+<details class="group bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+<summary class="flex justify-between items-center p-6 cursor-pointer font-headline-md text-lg list-none">
+                    How does Glymee differ from my regular doctor?
+                    <span class="material-symbols-outlined transition-transform group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    While your doctor provides clinical diagnosis and prescriptions, Glymee provides the daily support, real-time data analysis, and behavioral coaching required to manage your condition between visits.
+                </div>
+</details>
+<details class="group bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+<summary class="flex justify-between items-center p-6 cursor-pointer font-headline-md text-lg list-none">
+                    Do I need my own CGM to start?
+                    <span class="material-symbols-outlined transition-transform group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    If you don't have one, we can help facilitate getting a Continuous Glucose Monitor through our network of providers, or work with the device you already use.
+                </div>
+</details>
+<details class="group bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+<summary class="flex justify-between items-center p-6 cursor-pointer font-headline-md text-lg list-none">
+                    Is Glymee covered by insurance?
+                    <span class="material-symbols-outlined transition-transform group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    Many components of Glymee are HSA/FSA eligible. We also partner with select employers and insurance providers. Contact us for a benefit check.
+                </div>
+</details>
+<details class="group bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+<summary class="flex justify-between items-center p-6 cursor-pointer font-headline-md text-lg list-none">
+                    What results can I expect?
+                    <span class="material-symbols-outlined transition-transform group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    Most users see a reduction in A1c, improved time-in-range, and increased confidence in their food choices within the first 3 months.
+                </div>
+</details>
+</div>
+</section>
+<!-- Final CTA Section -->
+<section class="py-24 px-gutter max-w-container-max mx-auto reveal">
+<div class="bg-primary rounded-3xl p-12 text-center text-on-primary relative overflow-hidden">
+<div class="relative z-10 max-w-2xl mx-auto space-y-8">
+<h2 class="font-display-lg text-display-lg">Start Your Journey Today</h2>
+<p class="font-body-lg text-body-lg opacity-90">Ready to uncover the "why" behind your blood sugar? Book your initial discovery session with our team.</p>
+<div class="flex flex-col md:flex-row gap-4 justify-center">
+<button class="bg-white text-primary px-10 py-4 rounded-lg font-headline-md hover:bg-surface-container transition-all active:scale-95 shadow-lg">
+                        Book Consultation
+                    </button>
+<button class="bg-primary-container text-white px-10 py-4 rounded-lg font-headline-md hover:bg-opacity-90 transition-all border border-white/20">
+                        View Pricing
+                    </button>
+</div>
+<p class="text-label-sm font-label-sm opacity-70">No long-term contracts. Scientific approach. Real human support.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-16 px-gutter max-w-container-max mx-auto bg-surface-container-low border-t border-outline-variant/10">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+<div class="col-span-1 md:col-span-1">
+<span class="text-headline-md font-headline-md font-bold text-primary mb-4 block">Glymee</span>
+<p class="text-on-surface-variant text-sm">Empowering smarter metabolic health management through data and human connection.</p>
+</div>
+<div>
+<h4 class="font-headline-md text-sm mb-6 uppercase tracking-wider">Product</h4>
+<ul class="space-y-4">
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Features</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Integrations</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Pricing</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-headline-md text-sm mb-6 uppercase tracking-wider">Company</h4>
+<ul class="space-y-4">
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">About Us</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Careers</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Contact</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-headline-md text-sm mb-6 uppercase tracking-wider">Contact</h4>
+<p class="text-on-surface-variant text-sm mb-2">hello@glymee.com</p>
+<p class="text-on-surface-variant text-sm">+1 (555) 000-0000</p>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-outline-variant/10 gap-4">
+<p class="text-label-sm text-on-surface-variant">© 2024 Glymee Health. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="text-label-sm text-on-surface-variant hover:text-primary underline" href="#">Privacy Policy</a>
+<a class="text-label-sm text-on-surface-variant hover:text-primary underline" href="#">Terms of Service</a>
+<a class="text-label-sm text-on-surface-variant hover:text-primary underline" href="#">Accessibility</a>
+</div>
+</div>
+</footer>
+<script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Intersection Observer for scroll reveal animations
+    const revealCallback = (entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    };
+
+    const revealObserver = new IntersectionObserver(revealCallback, {
+        threshold: 0.15
+    });
+
+    document.querySelectorAll('.reveal').forEach(el => {
+        revealObserver.observe(el);
+    });
+
+    // Parallax Effect for Hero
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const parallax = document.querySelector('.parallax-element');
+        if (parallax) {
+            parallax.style.transform = `translateY(${scrolled * 0.4}px)`;
+        }
+    });
+</script>
+</body></html>
