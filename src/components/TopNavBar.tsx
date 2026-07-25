@@ -20,9 +20,9 @@ export default function TopNavBar() {
           <Image
             src="/Glymee_name.png"
             alt="Glymee"
-            width={120}
-            height={32}
-            className="h-8 w-auto"
+            width={180}
+            height={48}
+            className="h-11 w-auto"
             priority
           />
         <div className="hidden md:flex gap-6">
