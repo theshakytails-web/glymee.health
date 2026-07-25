@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import BookButton from "./BookButton";
 
 const navLinks = [
@@ -16,9 +17,14 @@ export default function TopNavBar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center h-16 px-6 bg-surface/80 backdrop-blur-md shadow-sm">
       <div className="flex items-center gap-8">
-        <span className="text-[24px] font-headline-md font-bold text-primary leading-[32px]">
-          Glymee
-        </span>
+          <Image
+            src="/Glymee_name.png"
+            alt="Glymee"
+            width={120}
+            height={32}
+            className="h-8 w-auto"
+            priority
+          />
         <div className="hidden md:flex gap-6">
           {navLinks.map((link) => (
             <a

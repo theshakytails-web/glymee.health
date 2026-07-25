@@ -1,0 +1,9 @@
+name = "glymee-api"
+main = "worker/index.ts"
+compatibility_date = "2024-12-01"
+
+# Bindings
+[vars]
+ENVIRONMENT = "production"
+
+# Brevo API key — set via: npx wrangler secret put BREVO_API_KEY

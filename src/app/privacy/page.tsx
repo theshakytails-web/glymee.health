@@ -65,7 +65,7 @@ export default function PrivacyPolicy() {
           <p>
             You have the right to access, correct, or delete your personal
             information. You may also opt out of communications at any time by
-            contacting us at hello@glymee.com.
+            contacting us at help@glymee.com.
           </p>
 
           <h2 className="font-headline-md text-[24px] leading-[32px] font-semibold text-on-background pt-4">
@@ -73,7 +73,7 @@ export default function PrivacyPolicy() {
           </h2>
           <p>
             If you have questions about this Privacy Policy, please contact us
-            at hello@glymee.com.
+            at help@glymee.com.
           </p>
         </div>
       </div>

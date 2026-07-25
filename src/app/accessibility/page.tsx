@@ -70,10 +70,10 @@ export default function Accessibility() {
             We welcome your feedback on the accessibility of Glymee. Please let
             us know if you encounter accessibility barriers by contacting us at{" "}
             <a
-              href="mailto:hello@glymee.com"
+              href="mailto:help@glymee.com"
               className="text-primary hover:underline"
             >
-              hello@glymee.com
+              help@glymee.com
             </a>
             .
           </p>

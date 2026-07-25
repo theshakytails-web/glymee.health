@@ -70,7 +70,7 @@ export default function TermsOfService() {
             6. Contact
           </h2>
           <p>
-            For questions about these Terms, contact us at hello@glymee.com.
+            For questions about these Terms, contact us at help@glymee.com.
           </p>
         </div>
       </div>

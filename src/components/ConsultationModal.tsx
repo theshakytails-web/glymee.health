@@ -103,14 +103,14 @@ export default function ConsultationModal() {
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-3 sm:mx-4">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-outline-variant/30 px-6 py-4 rounded-t-2xl flex justify-between items-center">
+        <div className="sticky top-0 bg-white border-b border-outline-variant/30 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl flex justify-between items-start sm:items-center gap-3">
           <div>
-            <h2 className="font-headline-md text-[24px] leading-[32px] font-semibold text-on-background">
+            <h2 className="font-headline-md text-[20px] sm:text-[24px] leading-[28px] sm:leading-[32px] font-semibold text-on-background">
               Book a Consultation
             </h2>
-            <p className="text-on-surface-variant text-sm mt-1">
+            <p className="text-on-surface-variant text-[13px] sm:text-sm mt-1">
               Tell us about yourself and we&apos;ll get back to you within 24 hours.
             </p>
           </div>
@@ -123,7 +123,7 @@ export default function ConsultationModal() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {/* Personal Info */}
           <fieldset className="space-y-4">
             <legend className="font-headline-md text-[20px] leading-[28px] font-semibold text-on-background flex items-center gap-2">
@@ -274,14 +274,13 @@ export default function ConsultationModal() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="diabetesType" className="block font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium text-on-surface-variant mb-1.5">
-                  Diabetes Type *
+                  Diabetes Type
                 </label>
                 <select
                   id="diabetesType"
                   name="diabetesType"
                   value={formData.diabetesType}
                   onChange={handleChange}
-                  required
                   className="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-[16px] leading-[24px] bg-white"
                 >
                   <option value="">Select type</option>
@@ -324,14 +323,13 @@ export default function ConsultationModal() {
 
             <div>
               <label htmlFor="mainConcern" className="block font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium text-on-surface-variant mb-1.5">
-                Main Health Concern *
+                Main Health Concern
               </label>
               <textarea
                 id="mainConcern"
                 name="mainConcern"
                 value={formData.mainConcern}
                 onChange={handleChange}
-                required
                 rows={3}
                 className="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-[16px] leading-[24px] resize-none"
                 placeholder="Tell us about your main health concern or what you'd like help with..."
@@ -348,14 +346,13 @@ export default function ConsultationModal() {
 
             <div>
               <label htmlFor="referralSource" className="block font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium text-on-surface-variant mb-1.5">
-                Referral Source *
+                Referral Source
               </label>
               <select
                 id="referralSource"
                 name="referralSource"
                 value={formData.referralSource}
                 onChange={handleChange}
-                required
                 className="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-[16px] leading-[24px] bg-white"
               >
                 <option value="">Select an option</option>
@@ -397,18 +394,18 @@ export default function ConsultationModal() {
           )}
 
           {/* Submit */}
-          <div className="flex justify-end gap-4 pt-4 border-t border-outline-variant/30">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4 border-t border-outline-variant/30">
             <button
               type="button"
               onClick={close}
-              className="px-6 py-3 rounded-lg font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium text-on-surface-variant hover:bg-surface-container transition-all"
+              className="w-full sm:w-auto px-6 py-3 rounded-lg font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium text-on-surface-variant hover:bg-surface-container transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-primary text-on-primary px-8 py-3 rounded-lg font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="w-full sm:w-auto bg-primary text-on-primary px-8 py-3 rounded-lg font-label-md text-[14px] leading-[20px] tracking-[0.01em] font-medium hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
