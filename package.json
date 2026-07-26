@@ -9,10 +9,10 @@
     "lint": "eslint",
     "worker:dev": "wrangler dev",
     "worker:deploy": "wrangler deploy",
-    "worker:secret": "wrangler secret put BREVO_API_KEY"
+    "worker:secret:key": "wrangler secret put MAILCHANNELS_API_KEY",
+    "worker:secret:account": "wrangler secret put MAILCHANNELS_ACCOUNT_ID"
   },
   "dependencies": {
-    "@getbrevo/brevo": "^6.0.2",
     "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4"

@@ -2,29 +2,24 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders(env),
-      });
+      return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
-    // POST /v1/sendemail
     if (request.method === "POST" && url.pathname === "/v1/sendemail") {
       return handleSendEmail(request, env);
     }
 
     return new Response(JSON.stringify({ error: "Not Found" }), {
       status: 404,
-      headers: { "Content-Type": "application/json", ...corsHeaders(env) },
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
     });
   },
 };
 
 interface Env {
-  BREVO_API_KEY: string;
-  ENVIRONMENT: string;
+  MAILCHANNELS_API_KEY: string;
+  MAILCHANNELS_ACCOUNT_ID: string;
 }
 
 interface FormData {
@@ -49,7 +44,7 @@ const ADMIN_SENDER_EMAIL = "noreply@glymee.com";
 const ADMIN_SENDER_NAME = "Glymee Health";
 const ADMIN_EMAIL = "help@glymee.com";
 
-function corsHeaders(env: Env): Record<string, string> {
+function corsHeaders(): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -57,8 +52,84 @@ function corsHeaders(env: Env): Record<string, string> {
   };
 }
 
+// ─── MailChannels Token ─────────────────────────────────────────────
+
+let cachedToken: { token: string; expires: number } | null = null;
+
+async function getMailChannelsToken(env: Env): Promise<string> {
+  if (cachedToken && Date.now() < cachedToken.expires) {
+    return cachedToken.token;
+  }
+
+  const response = await fetch("https://api.mailchannels.net/v1/tokens", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      account_id: env.MAILCHANNELS_ACCOUNT_ID,
+      api_key: env.MAILCHANNELS_API_KEY,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`MailChannels auth failed (${response.status}): ${err}`);
+  }
+
+  const data = (await response.json()) as { token: string; expires_at: string };
+  cachedToken = {
+    token: data.token,
+    expires: new Date(data.expires_at).getTime() - 60_000,
+  };
+  return cachedToken.token;
+}
+
+// ─── Send Email via MailChannels ────────────────────────────────────
+
+interface EmailPayload {
+  from: { email: string; name: string };
+  to: { email: string; name?: string }[];
+  subject: string;
+  html: string;
+  replyTo?: { email: string; name?: string };
+}
+
+async function sendEmail(env: Env, payload: EmailPayload): Promise<void> {
+  const token = await getMailChannelsToken(env);
+
+  const response = await fetch("https://api.mailchannels.net/v1/tx", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      personalizations: [
+        {
+          to: payload.to,
+          ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
+        },
+      ],
+      from: payload.from,
+      subject: payload.subject,
+      content: [
+        {
+          type: "text/html",
+          value: payload.html,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`MailChannels send failed (${response.status}): ${err}`);
+  }
+}
+
+// ─── Request Handler ────────────────────────────────────────────────
+
 async function handleSendEmail(request: Request, env: Env): Promise<Response> {
-  const headers = { "Content-Type": "application/json", ...corsHeaders(env) };
+  const headers = { "Content-Type": "application/json", ...corsHeaders() };
 
   try {
     const data: FormData = await request.json();
@@ -73,23 +144,21 @@ async function handleSendEmail(request: Request, env: Env): Promise<Response> {
     const confirmationHtml = getConfirmationEmail(data);
     const notificationHtml = getAdminNotificationEmail(data);
 
-    // Send confirmation to user (from help@glymee.com)
-    await sendBrevoEmail(env.BREVO_API_KEY, {
-      sender: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
+    // 1. Confirmation to user (from help@glymee.com)
+    await sendEmail(env, {
+      from: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
       to: [{ email: data.email, name: data.fullName }],
       subject: "We've Received Your Consultation Request - Glymee Health",
-      htmlContent: confirmationHtml,
-      tags: ["consultation", "confirmation"],
+      html: confirmationHtml,
     });
 
-    // Send notification to admin (from noreply@glymee.com)
-    await sendBrevoEmail(env.BREVO_API_KEY, {
-      sender: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
+    // 2. Notification to admin (from noreply@glymee.com → help@glymee.com)
+    await sendEmail(env, {
+      from: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
       to: [{ email: ADMIN_EMAIL, name: "Glymee Admin" }],
       subject: `New Consultation Request from ${data.fullName}`,
-      htmlContent: notificationHtml,
+      html: notificationHtml,
       replyTo: { email: data.email, name: data.fullName },
-      tags: ["consultation", "notification"],
     });
 
     return new Response(
@@ -102,39 +171,6 @@ async function handleSendEmail(request: Request, env: Env): Promise<Response> {
       JSON.stringify({ message: "Failed to process request" }),
       { status: 500, headers }
     );
-  }
-}
-
-async function sendBrevoEmail(
-  apiKey: string,
-  payload: {
-    sender: { email: string; name?: string };
-    to: { email: string; name?: string }[];
-    subject: string;
-    htmlContent: string;
-    replyTo?: { email: string; name?: string };
-    tags?: string[];
-  }
-): Promise<void> {
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": apiKey,
-    },
-    body: JSON.stringify({
-      sender: payload.sender,
-      to: payload.to,
-      subject: payload.subject,
-      htmlContent: payload.htmlContent,
-      replyTo: payload.replyTo,
-      tags: payload.tags,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Brevo API error ${response.status}: ${errorBody}`);
   }
 }
 
@@ -198,24 +234,22 @@ function getConfirmationEmail(data: FormData): string {
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9fb;border-radius:8px;padding:24px;margin-bottom:24px;">
-      <tr>
-        <td>
-          <h2 style="font-size:16px;font-weight:600;color:#00647c;margin:0 0 12px 0;">Your Submission Summary</h2>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">
-            <tr><td style="padding:4px 0;color:#888;width:140px;">Full Name</td><td style="padding:4px 0;font-weight:500;">${esc(data.fullName)}</td></tr>
-            <tr><td style="padding:4px 0;color:#888;">Age / Gender</td><td style="padding:4px 0;font-weight:500;">${esc(data.age)} / ${esc(data.gender)}</td></tr>
-            <tr><td style="padding:4px 0;color:#888;">Email</td><td style="padding:4px 0;font-weight:500;">${esc(data.email)}</td></tr>
-            <tr><td style="padding:4px 0;color:#888;">Phone</td><td style="padding:4px 0;font-weight:500;">${esc(data.phone)}</td></tr>
-            <tr><td style="padding:4px 0;color:#888;">Location</td><td style="padding:4px 0;font-weight:500;">${esc(data.city)}, ${esc(data.state)}</td></tr>
-            ${data.diabetesType ? `<tr><td style="padding:4px 0;color:#888;">Diabetes Type</td><td style="padding:4px 0;font-weight:500;">${esc(data.diabetesType)}</td></tr>` : ""}
-            ${data.diagnosisDuration ? `<tr><td style="padding:4px 0;color:#888;">Diagnosis Duration</td><td style="padding:4px 0;font-weight:500;">${esc(data.diagnosisDuration)}</td></tr>` : ""}
-            ${data.currentMedications ? `<tr><td style="padding:4px 0;color:#888;">Current Medications</td><td style="padding:4px 0;font-weight:500;">${esc(data.currentMedications)}</td></tr>` : ""}
-            ${data.mainConcern ? `<tr><td style="padding:4px 0;color:#888;">Main Concern</td><td style="padding:4px 0;font-weight:500;">${esc(data.mainConcern)}</td></tr>` : ""}
-            ${data.referralSource ? `<tr><td style="padding:4px 0;color:#888;">Found Us Via</td><td style="padding:4px 0;font-weight:500;">${esc(data.referralSource)}</td></tr>` : ""}
-            ${data.additionalNotes ? `<tr><td style="padding:4px 0;color:#888;">Additional Notes</td><td style="padding:4px 0;font-weight:500;">${esc(data.additionalNotes)}</td></tr>` : ""}
-          </table>
-        </td>
-      </tr>
+      <tr><td>
+        <h2 style="font-size:16px;font-weight:600;color:#00647c;margin:0 0 12px 0;">Your Submission Summary</h2>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">
+          <tr><td style="padding:4px 0;color:#888;width:140px;">Full Name</td><td style="padding:4px 0;font-weight:500;">${esc(data.fullName)}</td></tr>
+          <tr><td style="padding:4px 0;color:#888;">Age / Gender</td><td style="padding:4px 0;font-weight:500;">${esc(data.age)} / ${esc(data.gender)}</td></tr>
+          <tr><td style="padding:4px 0;color:#888;">Email</td><td style="padding:4px 0;font-weight:500;">${esc(data.email)}</td></tr>
+          <tr><td style="padding:4px 0;color:#888;">Phone</td><td style="padding:4px 0;font-weight:500;">${esc(data.phone)}</td></tr>
+          <tr><td style="padding:4px 0;color:#888;">Location</td><td style="padding:4px 0;font-weight:500;">${esc(data.city)}, ${esc(data.state)}</td></tr>
+          ${data.diabetesType ? `<tr><td style="padding:4px 0;color:#888;">Diabetes Type</td><td style="padding:4px 0;font-weight:500;">${esc(data.diabetesType)}</td></tr>` : ""}
+          ${data.diagnosisDuration ? `<tr><td style="padding:4px 0;color:#888;">Diagnosis Duration</td><td style="padding:4px 0;font-weight:500;">${esc(data.diagnosisDuration)}</td></tr>` : ""}
+          ${data.currentMedications ? `<tr><td style="padding:4px 0;color:#888;">Current Medications</td><td style="padding:4px 0;font-weight:500;">${esc(data.currentMedications)}</td></tr>` : ""}
+          ${data.mainConcern ? `<tr><td style="padding:4px 0;color:#888;">Main Concern</td><td style="padding:4px 0;font-weight:500;">${esc(data.mainConcern)}</td></tr>` : ""}
+          ${data.referralSource ? `<tr><td style="padding:4px 0;color:#888;">Found Us Via</td><td style="padding:4px 0;font-weight:500;">${esc(data.referralSource)}</td></tr>` : ""}
+          ${data.additionalNotes ? `<tr><td style="padding:4px 0;color:#888;">Additional Notes</td><td style="padding:4px 0;font-weight:500;">${esc(data.additionalNotes)}</td></tr>` : ""}
+        </table>
+      </td></tr>
     </table>
 
     <p style="font-size:14px;color:#555;margin:0 0 16px 0;line-height:1.6;">
