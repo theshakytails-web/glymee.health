@@ -33,6 +33,7 @@ export default function RootLayout({
       className={`${manrope.variable} ${inter.variable} scroll-smooth`}
     >
       <head>
+        <link rel="icon" href="/Glymee_logo_1.png" type="image/png" />
         <link
           href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
           rel="stylesheet"
