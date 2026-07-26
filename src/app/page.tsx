@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import TopNavBar from "@/components/TopNavBar";
 import HeroSection from "@/components/HeroSection";
 import WhyRootCauseMatters from "@/components/WhyRootCauseMatters";
@@ -10,6 +11,22 @@ import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
+
+export const metadata: Metadata = {
+  title: "Glymee | Diabetes Health Management Platform",
+  description:
+    "Stop guessing, start understanding your diabetes. Glymee offers personalized consultations, CGM insights, and root-cause analysis for sustainable health.",
+  alternates: {
+    canonical: "https://glymee.com",
+  },
+  openGraph: {
+    title: "Glymee | Manage Today. Healthy Tomorrow.",
+    description:
+      "Personalized diabetes care with root-cause analysis, continuous glucose monitoring, and data-driven health plans.",
+    url: "https://glymee.com",
+    images: ["/Glymee_logo_1.png"],
+  },
+};
 
 export default function Home() {
   return (

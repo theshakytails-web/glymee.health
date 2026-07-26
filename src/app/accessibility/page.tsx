@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Accessibility",
+  description:
+    "Glymee Health accessibility statement. Our commitment to making diabetes care accessible to everyone.",
+  alternates: { canonical: "https://glymee.com/accessibility" },
+};
 
 export default function Accessibility() {
   return (

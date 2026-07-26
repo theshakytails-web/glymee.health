@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Glymee Health terms of service. Read the terms and conditions for using our diabetes health management platform.",
+  alternates: { canonical: "https://glymee.com/terms" },
+};
 
 export default function TermsOfService() {
   return (
