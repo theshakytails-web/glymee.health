@@ -46,7 +46,12 @@ export default function HeroSection() {
           </p>
           <div className="flex flex-col sm:flex-wrap sm:flex-row gap-3 sm:gap-4 pt-2 md:pt-4">
             <BookButton variant="primary" className="w-full sm:w-auto px-8 py-4 shadow-md" />
-            <BookButton variant="outline" className="w-full sm:w-auto px-8 py-4" />
+            <a
+              href="#why-root-cause"
+              className="w-full sm:w-auto px-8 py-4 rounded-lg border-2 border-primary/20 text-primary font-semibold text-center hover:bg-primary/5 transition-colors"
+            >
+              Learn More
+            </a>
           </div>
         </div>
 

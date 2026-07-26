@@ -42,7 +42,7 @@ export default function CalendarPage() {
                 </div>
               )}
               <iframe
-                src="https://cal.com/glymee/30min"
+                src="https://cal.com/glymee/30min?theme=light&layout=month_view"
                 width="100%"
                 height="100%"
                 frameBorder="0"

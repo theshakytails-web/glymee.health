@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import Highcharts from "highcharts";
-import HighchartsReact from "highcharts-react-official";
 
 interface Stats {
   overview: { total: number; active: number; pending: number; inactive: number };
@@ -16,6 +14,44 @@ interface Stats {
     status: string;
     createdAt: string;
   }[];
+}
+
+const GLYMEE_COLORS = ["#00647c", "#006c49", "#825100", "#004e5e", "#7c5800"];
+
+function PieChart({ title, data }: { title: string; data: { name: string; y: number; color: string }[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<unknown>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const HC = (await import("highcharts")).default;
+      if (!mounted || !containerRef.current) return;
+      chartRef.current = HC.chart(containerRef.current, {
+        chart: { type: "pie", height: 300, backgroundColor: "transparent" },
+        title: { text: title, style: { fontSize: "14px", fontWeight: "600", color: "#1a1a1a" } },
+        credits: { enabled: false },
+        tooltip: { backgroundColor: "#fff", borderColor: "#e0e0e0", borderRadius: 8, style: { fontSize: "13px" } },
+        plotOptions: {
+          pie: {
+            innerSize: "50%",
+            dataLabels: { enabled: true, format: "<b>{point.name}</b>: {point.y}", style: { fontSize: "12px", fontWeight: "500", textOutline: "none" } },
+            showInLegend: true,
+            borderWidth: 2,
+            borderColor: "#ffffff",
+          },
+        },
+        legend: { itemStyle: { fontSize: "12px", fontWeight: "500", color: "#555" }, itemHoverStyle: { color: "#00647c" } },
+        series: [{ type: "pie" as const, name: "Patients", data }],
+      });
+    })();
+    return () => {
+      mounted = false;
+      if (chartRef.current) (chartRef.current as { destroy: () => void }).destroy();
+    };
+  }, [title, data]);
+
+  return <div ref={containerRef} />;
 }
 
 export default function AdminDashboard() {
@@ -46,71 +82,23 @@ export default function AdminDashboard() {
 
   if (!stats) return null;
 
-  const statusChartOptions: Highcharts.Options = {
-    chart: { type: "pie", height: 280 },
-    title: { text: "Patient Status", style: { fontSize: "14px", fontWeight: "600" } },
-    plotOptions: {
-      pie: {
-        innerSize: "55%",
-        dataLabels: { enabled: true, format: "<b>{point.name}</b>: {point.y}" },
-      },
-    },
-    series: [
-      {
-        type: "pie",
-        name: "Patients",
-        data: [
-          { name: "Active", y: stats.overview.active, color: "#006c49" },
-          { name: "Pending", y: stats.overview.pending, color: "#825100" },
-          { name: "Inactive", y: stats.overview.inactive, color: "#ba1a1a" },
-        ],
-      },
-    ],
-  };
+  const statusData = [
+    { name: "Active", y: stats.overview.active, color: "#006c49" },
+    { name: "Pending", y: stats.overview.pending, color: "#825100" },
+    { name: "Inactive", y: stats.overview.inactive, color: "#ba1a1a" },
+  ];
 
-  const diabetesChartOptions: Highcharts.Options = {
-    chart: { type: "pie", height: 280 },
-    title: { text: "Diabetes Types", style: { fontSize: "14px", fontWeight: "600" } },
-    plotOptions: {
-      pie: {
-        innerSize: "55%",
-        dataLabels: { enabled: true, format: "<b>{point.name}</b>: {point.y}" },
-      },
-    },
-    series: [
-      {
-        type: "pie",
-        name: "Patients",
-        data: stats.diabetesTypes.map((d, i) => ({
-          name: d.name,
-          y: d.value,
-          color: ["#00647c", "#006c49", "#825100", "#7c5800", "#004e5e"][i % 5],
-        })),
-      },
-    ],
-  };
+  const diabetesData = stats.diabetesTypes.map((d, i) => ({
+    name: d.name,
+    y: d.value,
+    color: GLYMEE_COLORS[i % GLYMEE_COLORS.length],
+  }));
 
-  const genderChartOptions: Highcharts.Options = {
-    chart: { type: "pie", height: 280 },
-    title: { text: "Gender Split", style: { fontSize: "14px", fontWeight: "600" } },
-    plotOptions: {
-      pie: {
-        innerSize: "55%",
-        dataLabels: { enabled: true, format: "<b>{point.name}</b>: {point.y}" },
-      },
-    },
-    series: [
-      {
-        type: "pie",
-        name: "Patients",
-        data: stats.genderSplit.map((g, i) => ({
-          name: g.name,
-          y: g.value,
-          color: i === 0 ? "#00647c" : i === 1 ? "#006c49" : "#825100",
-        })),
-      },
-    ],
-  };
+  const genderData = stats.genderSplit.map((g, i) => ({
+    name: g.name,
+    y: g.value,
+    color: GLYMEE_COLORS[i % GLYMEE_COLORS.length],
+  }));
 
   return (
     <div className="min-h-screen bg-surface-container-low">
@@ -142,13 +130,13 @@ export default function AdminDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-surface rounded-xl border border-outline-variant/10 p-4">
-              <HighchartsReact highcharts={Highcharts} options={statusChartOptions} />
+              <PieChart title="Patient Status" data={statusData} />
             </div>
             <div className="bg-surface rounded-xl border border-outline-variant/10 p-4">
-              <HighchartsReact highcharts={Highcharts} options={diabetesChartOptions} />
+              <PieChart title="Diabetes Types" data={diabetesData} />
             </div>
             <div className="bg-surface rounded-xl border border-outline-variant/10 p-4">
-              <HighchartsReact highcharts={Highcharts} options={genderChartOptions} />
+              <PieChart title="Gender Split" data={genderData} />
             </div>
           </div>
 
