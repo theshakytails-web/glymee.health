@@ -18,8 +18,7 @@ export default {
 };
 
 interface Env {
-  MAILCHANNELS_API_KEY: string;
-  MAILCHANNELS_ACCOUNT_ID: string;
+  BREVO_API_KEY: string;
 }
 
 interface FormData {
@@ -42,7 +41,7 @@ const CONFIRMATION_SENDER_EMAIL = "help@glymee.com";
 const CONFIRMATION_SENDER_NAME = "Glymee Health";
 const ADMIN_SENDER_EMAIL = "noreply@glymee.com";
 const ADMIN_SENDER_NAME = "Glymee Health";
-const ADMIN_EMAIL = "help@glymee.com";
+const ADMIN_EMAIL = "glymee.health@gmail.com";
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -52,77 +51,30 @@ function corsHeaders(): Record<string, string> {
   };
 }
 
-// ─── MailChannels Token ─────────────────────────────────────────────
-
-let cachedToken: { token: string; expires: number } | null = null;
-
-async function getMailChannelsToken(env: Env): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expires) {
-    return cachedToken.token;
-  }
-
-  const response = await fetch("https://api.mailchannels.net/v1/tokens", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      account_id: env.MAILCHANNELS_ACCOUNT_ID,
-      api_key: env.MAILCHANNELS_API_KEY,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`MailChannels auth failed (${response.status}): ${err}`);
-  }
-
-  const data = (await response.json()) as { token: string; expires_at: string };
-  cachedToken = {
-    token: data.token,
-    expires: new Date(data.expires_at).getTime() - 60_000,
-  };
-  return cachedToken.token;
-}
-
-// ─── Send Email via MailChannels ────────────────────────────────────
+// ─── Send via Brevo ─────────────────────────────────────────────────
 
 interface EmailPayload {
-  from: { email: string; name: string };
+  sender: { email: string; name: string };
   to: { email: string; name?: string }[];
   subject: string;
-  html: string;
+  htmlContent: string;
   replyTo?: { email: string; name?: string };
+  tags?: string[];
 }
 
-async function sendEmail(env: Env, payload: EmailPayload): Promise<void> {
-  const token = await getMailChannelsToken(env);
-
-  const response = await fetch("https://api.mailchannels.net/v1/tx", {
+async function sendBrevoEmail(apiKey: string, payload: EmailPayload): Promise<void> {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      "api-key": apiKey,
     },
-    body: JSON.stringify({
-      personalizations: [
-        {
-          to: payload.to,
-          ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
-        },
-      ],
-      from: payload.from,
-      subject: payload.subject,
-      content: [
-        {
-          type: "text/html",
-          value: payload.html,
-        },
-      ],
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`MailChannels send failed (${response.status}): ${err}`);
+    throw new Error(`Brevo API error ${response.status}: ${err}`);
   }
 }
 
@@ -145,20 +97,22 @@ async function handleSendEmail(request: Request, env: Env): Promise<Response> {
     const notificationHtml = getAdminNotificationEmail(data);
 
     // 1. Confirmation to user (from help@glymee.com)
-    await sendEmail(env, {
-      from: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
+    await sendBrevoEmail(env.BREVO_API_KEY, {
+      sender: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
       to: [{ email: data.email, name: data.fullName }],
       subject: "We've Received Your Consultation Request - Glymee Health",
-      html: confirmationHtml,
+      htmlContent: confirmationHtml,
+      tags: ["consultation", "confirmation"],
     });
 
-    // 2. Notification to admin (from noreply@glymee.com → help@glymee.com)
-    await sendEmail(env, {
-      from: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
+    // 2. Notification to admin (from noreply@glymee.com → gmail)
+    await sendBrevoEmail(env.BREVO_API_KEY, {
+      sender: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
       to: [{ email: ADMIN_EMAIL, name: "Glymee Admin" }],
       subject: `New Consultation Request from ${data.fullName}`,
-      html: notificationHtml,
+      htmlContent: notificationHtml,
       replyTo: { email: data.email, name: data.fullName },
+      tags: ["consultation", "notification"],
     });
 
     return new Response(

@@ -7,5 +7,4 @@ compatibility_date = "2024-12-01"
 ENVIRONMENT = "production"
 
 # Secrets (set via wrangler secret put):
-# MAILCHANNELS_API_KEY — from Cloudflare Dashboard → MailChannels
-# MAILCHANNELS_ACCOUNT_ID — your Cloudflare Account ID
+# BREVO_API_KEY — from Brevo API Settings
