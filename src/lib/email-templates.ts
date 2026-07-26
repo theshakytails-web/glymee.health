@@ -1,12 +1,3 @@
-import fs from "fs";
-import path from "path";
-
-function getLogoBase64(): string {
-  const logoPath = path.join(process.cwd(), "public", "Glymee_name.png");
-  const buffer = fs.readFileSync(logoPath);
-  return `data:image/png;base64,${buffer.toString("base64")}`;
-}
-
 function esc(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -31,8 +22,8 @@ const EMAIL_WRAPPER = (content: string) => `
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
           <tr>
             <td style="background-color:#00647c;padding:32px 40px;text-align:center;">
-              <img src="${getLogoBase64()}" alt="Glymee" width="180" style="display:block;margin:0 auto 12px;" />
-              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:0;letter-spacing:0.5px;">Manage Today. Healthy Tomorrow.</p>
+              <h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0;letter-spacing:1px;">Glymee</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0 0;letter-spacing:0.5px;">Manage Today. Healthy Tomorrow.</p>
             </td>
           </tr>
           <tr>
