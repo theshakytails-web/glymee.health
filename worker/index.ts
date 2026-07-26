@@ -43,7 +43,7 @@ interface FormData {
   additionalNotes: string;
 }
 
-const SENDER_EMAIL = "help@glymee.com";
+const SENDER_EMAIL = "noreply@glymee.com";
 const SENDER_NAME = "Glymee Health";
 const ADMIN_EMAIL = "help@glymee.com";
 
