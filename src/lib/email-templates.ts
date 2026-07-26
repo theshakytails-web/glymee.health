@@ -184,3 +184,30 @@ export function getAdminNotificationEmail(data: FormData): string {
     </table>
   `);
 }
+
+export function getOtpEmail(code: string): string {
+  return EMAIL_WRAPPER(`
+    <h1 style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;">Your Admin Login Code</h1>
+    <p style="font-size:15px;color:#555;margin:0 0 24px 0;line-height:1.6;">
+      Use the following one-time password to sign in to the Glymee admin panel. This code expires in <strong style="color:#00647c;">10 minutes</strong>.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td align="center">
+          <div style="background-color:#f0f9fb;border:2px dashed #00647c;border-radius:12px;padding:24px 48px;display:inline-block;">
+            <p style="font-size:36px;font-weight:800;color:#00647c;letter-spacing:12px;margin:0;font-family:monospace;">${esc(code)}</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <p style="font-size:14px;color:#888;margin:0 0 16px 0;line-height:1.6;">
+      If you did not request this code, please ignore this email or contact support at <a href="mailto:help@glymee.com" style="color:#00647c;text-decoration:none;">help@glymee.com</a>.
+    </p>
+    <p style="font-size:14px;color:#555;margin:0;line-height:1.6;">
+      Best regards,<br/>
+      <strong style="color:#00647c;">The Glymee Team</strong>
+    </p>
+  `);
+}
