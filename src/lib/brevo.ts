@@ -13,6 +13,8 @@ export function getBrevo(): BrevoClient {
   return _brevo;
 }
 
-export const SENDER_EMAIL = "noreply@glymee.com";
-export const SENDER_NAME = "Glymee Health";
+export const CONFIRMATION_SENDER_EMAIL = "help@glymee.com";
+export const CONFIRMATION_SENDER_NAME = "Glymee Health";
+export const ADMIN_SENDER_EMAIL = "noreply@glymee.com";
+export const ADMIN_SENDER_NAME = "Glymee Health";
 export const ADMIN_EMAIL = "help@glymee.com";

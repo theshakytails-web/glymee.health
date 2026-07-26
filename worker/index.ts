@@ -43,8 +43,10 @@ interface FormData {
   additionalNotes: string;
 }
 
-const SENDER_EMAIL = "noreply@glymee.com";
-const SENDER_NAME = "Glymee Health";
+const CONFIRMATION_SENDER_EMAIL = "help@glymee.com";
+const CONFIRMATION_SENDER_NAME = "Glymee Health";
+const ADMIN_SENDER_EMAIL = "noreply@glymee.com";
+const ADMIN_SENDER_NAME = "Glymee Health";
 const ADMIN_EMAIL = "help@glymee.com";
 
 function corsHeaders(env: Env): Record<string, string> {
@@ -71,16 +73,18 @@ async function handleSendEmail(request: Request, env: Env): Promise<Response> {
     const confirmationHtml = getConfirmationEmail(data);
     const notificationHtml = getAdminNotificationEmail(data);
 
-    // Send confirmation to user
+    // Send confirmation to user (from help@glymee.com)
     await sendBrevoEmail(env.BREVO_API_KEY, {
+      sender: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
       to: [{ email: data.email, name: data.fullName }],
       subject: "We've Received Your Consultation Request - Glymee Health",
       htmlContent: confirmationHtml,
       tags: ["consultation", "confirmation"],
     });
 
-    // Send notification to admin
+    // Send notification to admin (from noreply@glymee.com)
     await sendBrevoEmail(env.BREVO_API_KEY, {
+      sender: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
       to: [{ email: ADMIN_EMAIL, name: "Glymee Admin" }],
       subject: `New Consultation Request from ${data.fullName}`,
       htmlContent: notificationHtml,
@@ -104,6 +108,7 @@ async function handleSendEmail(request: Request, env: Env): Promise<Response> {
 async function sendBrevoEmail(
   apiKey: string,
   payload: {
+    sender: { email: string; name?: string };
     to: { email: string; name?: string }[];
     subject: string;
     htmlContent: string;
@@ -118,7 +123,7 @@ async function sendBrevoEmail(
       "api-key": apiKey,
     },
     body: JSON.stringify({
-      sender: { email: SENDER_EMAIL, name: SENDER_NAME },
+      sender: payload.sender,
       to: payload.to,
       subject: payload.subject,
       htmlContent: payload.htmlContent,

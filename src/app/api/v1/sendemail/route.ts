@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBrevo, SENDER_EMAIL, SENDER_NAME, ADMIN_EMAIL } from "@/lib/brevo";
+import { getBrevo, CONFIRMATION_SENDER_EMAIL, CONFIRMATION_SENDER_NAME, ADMIN_SENDER_EMAIL, ADMIN_SENDER_NAME, ADMIN_EMAIL } from "@/lib/brevo";
 import { getConfirmationEmail, getAdminNotificationEmail } from "@/lib/email-templates";
 
 interface FormData {
@@ -31,18 +31,18 @@ export async function POST(request: NextRequest) {
 
     const brevo = getBrevo();
 
-    // 1. Send confirmation email to the user
+    // 1. Send confirmation email to the user (from help@glymee.com)
     await brevo.transactionalEmails.sendTransacEmail({
-      sender: { email: SENDER_EMAIL, name: SENDER_NAME },
+      sender: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
       to: [{ email: data.email, name: data.fullName }],
       subject: `We've Received Your Consultation Request - Glymee Health`,
       htmlContent: getConfirmationEmail(data),
       tags: ["consultation", "confirmation"],
     });
 
-    // 2. Send notification email to admin
+    // 2. Send notification email to admin (from noreply@glymee.com)
     await brevo.transactionalEmails.sendTransacEmail({
-      sender: { email: SENDER_EMAIL, name: SENDER_NAME },
+      sender: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
       to: [{ email: ADMIN_EMAIL, name: "Glymee Admin" }],
       subject: `New Consultation Request from ${data.fullName}`,
       htmlContent: getAdminNotificationEmail(data),
