@@ -156,6 +156,8 @@ export default function ClinicalReportPage() {
   const [saveError, setSaveError] = useState("");
   const [metricTargets, setMetricTargets] = useState<Record<string, MetricTarget>>({});
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [lastReportId, setLastReportId] = useState<string | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const [metrics, setMetrics] = useState<ClinicalMetrics>({ ...EMPTY_METRICS });
   const [lifestyle, setLifestyle] = useState<LifestyleAssessment>({ ...EMPTY_LIFESTYLE });
@@ -282,6 +284,9 @@ export default function ClinicalReportPage() {
 
       if (!res.ok) throw new Error("Failed to save report");
 
+      const result = await res.json();
+      setLastReportId(result.id);
+
       setGenerated(true);
       setActiveTab("report");
       setSaveSuccess(true);
@@ -298,6 +303,31 @@ export default function ClinicalReportPage() {
 
   function handlePrint() {
     window.print();
+  }
+
+  async function handleDownloadPdf(reportId: string) {
+    setGeneratingPdf(true);
+    try {
+      const res = await fetch("/api/admin/reports/generate-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId }),
+      });
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const data = await res.json();
+      if (data.pdfUrl) {
+        window.open(data.pdfUrl, "_blank");
+        loadSavedReports(selectedPatient);
+      } else {
+        alert("PDF generation succeeded but no URL returned. GCS may not be configured.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate PDF. Check console for details.");
+    } finally {
+      setGeneratingPdf(false);
+    }
   }
 
   function loadReportIntoView(report: SavedReport) {
@@ -352,10 +382,16 @@ export default function ClinicalReportPage() {
             <h1 className="font-headline-md text-2xl font-bold text-on-surface">Clinical Assessment Report</h1>
             <div className="flex gap-2">
               {generated && (
-                <button onClick={handlePrint} className="px-4 py-2 text-sm bg-surface border border-outline-variant/20 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface-variant flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">print</span>
-                  Print PDF
-                </button>
+                <>
+                  <button onClick={handlePrint} className="px-4 py-2 text-sm bg-surface border border-outline-variant/20 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface-variant flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px]">print</span>
+                    Print
+                  </button>
+                  <button onClick={() => lastReportId && handleDownloadPdf(lastReportId)} disabled={generatingPdf || !lastReportId} className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50">
+                    <span className="material-symbols-outlined text-[18px]">{generatingPdf ? "hourglass_top" : "download"}</span>
+                    {generatingPdf ? "Generating..." : "Download PDF"}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -711,8 +747,11 @@ export default function ClinicalReportPage() {
                           <td className="py-3 px-4 text-on-surface-variant text-xs truncate max-w-xs">{r.clinicalSummary?.slice(0, 80)}...</td>
                           <td className="py-3 px-4 text-right">
                             <button onClick={() => loadReportIntoView(r)} className="text-primary hover:text-primary/80 text-xs font-medium px-3 py-1 rounded hover:bg-primary/5 transition-colors">View</button>
+                            <button onClick={() => handleDownloadPdf(r.id)} disabled={generatingPdf} className="text-secondary hover:text-secondary/80 text-xs font-medium px-3 py-1 rounded hover:bg-secondary/5 transition-colors ml-1 disabled:opacity-50">
+                              {generatingPdf ? "..." : "Download"}
+                            </button>
                             {r.pdfUrl && (
-                              <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-secondary/80 text-xs font-medium px-3 py-1 rounded hover:bg-secondary/5 transition-colors ml-1">PDF</a>
+                              <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-tertiary hover:text-tertiary/80 text-xs font-medium px-3 py-1 rounded hover:bg-tertiary/5 transition-colors ml-1">Open PDF</a>
                             )}
                           </td>
                         </tr>

@@ -29,6 +29,25 @@ interface ReportData {
   followUpSchedule: string;
 }
 
+interface MetricTarget {
+  label: string;
+  min?: number;
+  max?: number;
+  unit: string;
+}
+
+interface PdfOptions {
+  metricTargets?: {
+    bloodPressureSystolic?: MetricTarget;
+    bloodPressureDiastolic?: MetricTarget;
+    heartRate?: MetricTarget;
+    bmi?: MetricTarget;
+    hba1c?: MetricTarget;
+    glucoseFasting?: MetricTarget;
+    glucosePostPrandial?: MetricTarget;
+  };
+}
+
 function drawHeader(doc: jsPDF) {
   doc.setFillColor(0, 100, 124);
   doc.rect(0, 0, 210, 45, "F");
@@ -63,6 +82,7 @@ function drawSection(doc: jsPDF, y: number, title: string, color: [number, numbe
 
 function drawTable(doc: jsPDF, y: number, headers: string[], rows: string[][], startX = 20): number {
   const colW = (170) / headers.length;
+  if (y > 260) { doc.addPage(); y = 40; drawHeader(doc); }
   doc.setFontSize(9);
   doc.setFillColor(245, 245, 245);
   headers.forEach((h, i) => {
@@ -73,7 +93,7 @@ function drawTable(doc: jsPDF, y: number, headers: string[], rows: string[][], s
   });
   y += 10;
   rows.forEach((row, ri) => {
-    if (y > 260) { doc.addPage(); y = 40; }
+    if (y > 260) { doc.addPage(); y = 40; drawHeader(doc); }
     row.forEach((cell, ci) => {
       doc.setTextColor(50, 50, 50);
       doc.setFont("helvetica", ci === 1 ? "normal" : "bold");
@@ -87,7 +107,45 @@ function drawTable(doc: jsPDF, y: number, headers: string[], rows: string[][], s
   return y + 4;
 }
 
-export function generateReportPdf(data: ReportData): Buffer {
+function rangeString(key: string, targets?: PdfOptions["metricTargets"]): string {
+  if (!targets) {
+    const defaults: Record<string, string> = {
+      bloodPressure: "< 130/80 mmHg",
+      heartRate: "60-100 bpm",
+      bmi: "18.5-24.9 kg/m2",
+      hba1c: "< 7.0%",
+      glucoseFasting: "< 126 mg/dL",
+      glucosePostPrandial: "< 180 mg/dL",
+    };
+    return defaults[key] || "";
+  }
+
+  switch (key) {
+    case "bloodPressure": {
+      const sys = targets.bloodPressureSystolic;
+      const dia = targets.bloodPressureDiastolic;
+      return `< ${sys?.max ?? 130}/${dia?.max ?? 80} mmHg`;
+    }
+    case "heartRate": {
+      const hr = targets.heartRate;
+      return `${hr?.min ?? 60}-${hr?.max ?? 100} bpm`;
+    }
+    case "bmi": {
+      const b = targets.bmi;
+      return `${b?.min ?? 18.5}-${b?.max ?? 24.9} kg/m2`;
+    }
+    case "hba1c":
+      return `< ${targets.hba1c?.max ?? 7.0}%`;
+    case "glucoseFasting":
+      return `< ${targets.glucoseFasting?.max ?? 126} mg/dL`;
+    case "glucosePostPrandial":
+      return `< ${targets.glucosePostPrandial?.max ?? 180} mg/dL`;
+    default:
+      return "";
+  }
+}
+
+export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffer {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   let pageNum = 1;
 
@@ -159,15 +217,16 @@ export function generateReportPdf(data: ReportData): Buffer {
   y += invLines.length * 4 + 8;
 
   y = drawSection(doc, y, "4. Clinical Metrics & Vitals", [0, 100, 124]);
+  const targets = options?.metricTargets;
   y = drawTable(doc, y,
     ["Metric", "Recorded Value", "Target Range"],
     [
-      ["Blood Pressure", data.bloodPressure, "< 130/80 mmHg"],
-      ["Heart Rate", data.heartRate, "60-100 bpm"],
-      ["BMI / Weight", data.bmi, "18.5-24.9 kg/m2"],
-      ["HbA1c", data.hba1c, "< 7.0%"],
-      ["Fasting Glucose", data.glucoseFasting, "< 126 mg/dL"],
-      ["Postprandial Glucose", data.glucosePostPrandial, "< 180 mg/dL"],
+      ["Blood Pressure", data.bloodPressure, rangeString("bloodPressure", targets)],
+      ["Heart Rate", data.heartRate, rangeString("heartRate", targets)],
+      ["BMI / Weight", data.bmi, rangeString("bmi", targets)],
+      ["HbA1c", data.hba1c, rangeString("hba1c", targets)],
+      ["Fasting Glucose", data.glucoseFasting, rangeString("glucoseFasting", targets)],
+      ["Postprandial Glucose", data.glucosePostPrandial, rangeString("glucosePostPrandial", targets)],
     ]
   );
 
