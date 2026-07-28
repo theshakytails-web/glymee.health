@@ -21,6 +21,15 @@ interface Patient {
   additionalNotes: string | null;
 }
 
+interface SavedReport {
+  id: string;
+  patientId: string;
+  pdfUrl: string | null;
+  clinicianName: string;
+  clinicalSummary: string;
+  createdAt: string;
+}
+
 interface ClinicalMetrics {
   bloodPressureSystolic: number;
   bloodPressureDiastolic: number;
@@ -84,7 +93,6 @@ function MetricGauge({ label, value, min, max, unit }: { label: string; value: n
     return () => { mounted = false; if (chartRef.current) (chartRef.current as { destroy: () => void }).destroy(); };
   }, [label, value, min, max]);
 
-  const inRangeVal = (min != null ? value >= min : true) && (max != null ? value <= max : true);
   const status = (min != null && value < min) ? "Low" : (max != null && value > max) ? "High" : "Normal";
   const statusColor = status === "Normal" ? "#006c49" : status === "High" ? "#ba1a1a" : "#825100";
 
@@ -114,12 +122,16 @@ export default function ClinicalReportPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
+  const [loadingReports, setLoadingReports] = useState(false);
   const [clinicianName, setClinicianName] = useState("Dr. [Clinician Name]");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generated, setGenerated] = useState(false);
-  const [activeTab, setActiveTab] = useState<"input" | "report">("input");
+  const [activeTab, setActiveTab] = useState<"input" | "report" | "history">("input");
   const reportRef = useRef<HTMLDivElement>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const [metrics, setMetrics] = useState<ClinicalMetrics>({
     bloodPressureSystolic: 120,
@@ -151,6 +163,10 @@ export default function ClinicalReportPage() {
     "Patient presents with [type] diabetes managed on [medications]. Metabolic control is [well-controlled/moderate/suboptimal] with HbA1c at [value]. Lifestyle assessment reveals [key findings]. Primary risk factors include [risks]. Recommended intervention focuses on [plan summary]."
   );
 
+  const [previousInvestigations, setPreviousInvestigations] = useState(
+    "No prior investigations on record."
+  );
+
   function loadPatients() {
     fetch("/api/admin/auth/me")
       .then((r) => { if (!r.ok) throw new Error(); })
@@ -163,18 +179,28 @@ export default function ClinicalReportPage() {
 
   useEffect(() => { loadPatients(); }, [router]);
 
+  function loadSavedReports(pid: string) {
+    setLoadingReports(true);
+    fetch("/api/admin/reports?patientId=" + encodeURIComponent(pid))
+      .then((r) => r.json())
+      .then((data) => setSavedReports(data.reports || []))
+      .catch(() => setSavedReports([]))
+      .finally(() => setLoadingReports(false));
+  }
+
   useEffect(() => {
-    if (!selectedPatient) { setPatient(null); return; }
+    if (!selectedPatient) { setPatient(null); setSavedReports([]); return; }
     fetch("/api/admin/patients/" + selectedPatient)
       .then((r) => r.json())
       .then((data) => {
         setPatient(data.patient);
         const p = data.patient;
         setClinicalSummary(
-          "Patient presents with " + (p.diabetesType || "unspecified") + " diabetes managed on " + (p.currentMedications || "current medications") + ". Metabolic control assessment with HbA1c at " + metrics.hba1c + "%. Lifestyle assessment reveals " + (lifestyle.dietaryPattern || "").toLowerCase() + ". Primary risk factors to be addressed. Recommended intervention focuses on glycemic optimization and lifestyle modification."
+          "Patient presents with " + (p.diabetesType || "unspecified") + " diabetes managed on " + (p.currentMedications || "current medications") + ". Metabolic control assessment with HbA1c at " + metrics.hba1c + "%. Lifestyle assessment reveals metabolic imbalances. Primary risk factors to be addressed. Recommended intervention focuses on glycemic optimization and lifestyle modification."
         );
       })
       .catch(() => setPatient(null));
+    loadSavedReports(selectedPatient);
   }, [selectedPatient]);
 
   function handleMetricChange(key: keyof ClinicalMetrics, value: string) {
@@ -183,24 +209,89 @@ export default function ClinicalReportPage() {
     setMetrics((prev) => ({ ...prev, [key]: num }));
   }
 
+  function getMetricStatus(key: keyof typeof METRIC_TARGETS, value: number): string {
+    const target = METRIC_TARGETS[key];
+    if (!("min" in target) && "max" in target) return value <= target.max ? "Normal" : "High";
+    if ("min" in target && "max" in target) return value >= target.min && value <= target.max ? "Normal" : value < target.min ? "Low" : "High";
+    return "";
+  }
+
   async function handleGenerateReport() {
     if (!patient) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setGenerated(true);
-    setActiveTab("report");
-    setSaving(false);
+    setSaveSuccess(false);
+    setSaveError("");
+
+    await new Promise((r) => setTimeout(r, 300));
+
+    try {
+      const reportData = {
+        patientId: patient.id,
+        clinicianName,
+        metrics,
+        lifestyle,
+        actionPlan,
+        clinicalSummary,
+        previousInvestigations,
+        reportData: {
+          patientName: patient.fullName,
+          age: patient.age,
+          gender: patient.gender,
+          chiefComplaint: patient.mainConcern || "Not specified",
+          diagnoses: (patient.diabetesType || "Not specified") + " - " + (patient.diagnosisDuration || "Duration not specified"),
+          medications: patient.currentMedications || "None reported",
+          history: patient.additionalNotes || "None reported",
+        },
+      };
+
+      const res = await fetch("/api/admin/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reportData),
+      });
+
+      if (!res.ok) throw new Error("Failed to save report");
+
+      setGenerated(true);
+      setActiveTab("report");
+      setSaveSuccess(true);
+      loadSavedReports(patient.id);
+    } catch (err) {
+      setSaveError("Failed to save report. Check console for details.");
+      console.error(err);
+      setGenerated(true);
+      setActiveTab("report");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handlePrint() {
     window.print();
   }
 
-  function getMetricStatus(key: keyof typeof METRIC_TARGETS, value: number): string {
-    const target = METRIC_TARGETS[key];
-    if (!("min" in target) && "max" in target) return value <= target.max ? "Normal" : "High";
-    if ("min" in target && "max" in target) return value >= target.min && value <= target.max ? "Normal" : value < target.min ? "Low" : "High";
-    return "";
+  function loadReportIntoView(report: SavedReport) {
+    try {
+      const data = JSON.parse((report as any).reportDataJson || "{}");
+      const m = JSON.parse((report as any).metricsJson || "{}");
+      const l = JSON.parse((report as any).lifestyleJson || "{}");
+      const a = JSON.parse((report as any).actionPlanJson || "{}");
+
+      setClinicianName(report.clinicianName || "Dr. [Clinician Name]");
+      if (m.bloodPressureSystolic) setMetrics(m);
+      if (l.dietaryPattern) setLifestyle(l);
+      if (a.continuousMonitoring) setActionPlan(a);
+      setClinicalSummary(report.clinicalSummary || "");
+      setPreviousInvestigations((report as any).previousInvestigations || "");
+      setGenerated(true);
+      setActiveTab("report");
+    } catch {
+      alert("Could not load report data.");
+    }
+  }
+
+  function formatDate(ts: string) {
+    return new Date(ts).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -241,8 +332,20 @@ export default function ClinicalReportPage() {
             <div className="flex gap-1 bg-surface rounded-xl p-1 border border-outline-variant/10 w-fit">
               <button onClick={() => setActiveTab("input")} className={"px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (activeTab === "input" ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface")}>Patient & Metrics</button>
               <button onClick={() => setActiveTab("report")} disabled={!generated} className={"px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (activeTab === "report" ? "bg-primary text-on-primary" : generated ? "text-on-surface-variant hover:text-on-surface" : "text-gray-300 cursor-not-allowed")}>Generated Report</button>
+              <button onClick={() => setActiveTab("history")} disabled={!selectedPatient} className={"px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (activeTab === "history" ? "bg-primary text-on-primary" : selectedPatient ? "text-on-surface-variant hover:text-on-surface" : "text-gray-300 cursor-not-allowed")}>History</button>
             </div>
           </div>
+
+          {saveSuccess && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 no-print">
+              Report saved successfully.
+            </div>
+          )}
+          {saveError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 no-print">
+              {saveError}
+            </div>
+          )}
 
           {activeTab === "input" && (
             <div className="space-y-6 no-print">
@@ -299,14 +402,7 @@ export default function ClinicalReportPage() {
                       ].map(({ key }) => {
                         const t = METRIC_TARGETS[key];
                         return (
-                          <MetricGauge
-                            key={key}
-                            label={t.label}
-                            value={metrics[key]}
-                            min={"min" in t ? t.min : undefined}
-                            max={"max" in t ? t.max : undefined}
-                            unit={t.unit}
-                          />
+                          <MetricGauge key={key} label={t.label} value={metrics[key]} min={"min" in t ? t.min : undefined} max={"max" in t ? t.max : undefined} unit={t.unit} />
                         );
                       })}
                     </div>
@@ -328,6 +424,11 @@ export default function ClinicalReportPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
+                    <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Previous Investigations</h2>
+                    <textarea value={previousInvestigations} onChange={(e) => setPreviousInvestigations(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="List any prior lab reports, imaging, or specialist consultations..." />
                   </div>
 
                   <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
@@ -354,7 +455,7 @@ export default function ClinicalReportPage() {
 
                   <div className="flex justify-end no-print">
                     <button onClick={handleGenerateReport} disabled={saving} className="px-6 py-2.5 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
-                      {saving ? "Generating..." : "Generate Report"}
+                      {saving ? "Generating..." : "Generate & Save Report"}
                     </button>
                   </div>
                 </>
@@ -385,12 +486,7 @@ export default function ClinicalReportPage() {
                 <section>
                   <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">1. Clinical & Medical History</h2>
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700 w-1/3">Condition / Parameter</th>
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Clinical Status & Details</th>
-                      </tr>
-                    </thead>
+                    <thead><tr className="bg-gray-50"><th className="text-left py-2.5 px-4 font-semibold text-gray-700 w-1/3">Condition / Parameter</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Clinical Status & Details</th></tr></thead>
                     <tbody>
                       <tr className="border-b border-gray-100"><td className="py-2.5 px-4 text-gray-500">Primary Diagnoses</td><td className="py-2.5 px-4 font-medium">{patient.diabetesType || "Not specified"} — {patient.diagnosisDuration || "Duration not specified"}</td></tr>
                       <tr className="border-b border-gray-100"><td className="py-2.5 px-4 text-gray-500">Current Medications</td><td className="py-2.5 px-4 font-medium">{patient.currentMedications || "None reported"}</td></tr>
@@ -402,12 +498,7 @@ export default function ClinicalReportPage() {
                 <section>
                   <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">2. Lifestyle & Behavioral Assessment</h2>
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700 w-1/3">Domain</th>
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Patient Assessment Findings</th>
-                      </tr>
-                    </thead>
+                    <thead><tr className="bg-gray-50"><th className="text-left py-2.5 px-4 font-semibold text-gray-700 w-1/3">Domain</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Patient Assessment Findings</th></tr></thead>
                     <tbody>
                       {[
                         { label: "Dietary Pattern", value: lifestyle.dietaryPattern },
@@ -423,7 +514,14 @@ export default function ClinicalReportPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">3. Clinical Metrics & Vitals</h2>
+                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">3. Previous Investigations</h2>
+                  <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 leading-relaxed">
+                    {previousInvestigations || "None reported"}
+                  </div>
+                </section>
+
+                <section>
+                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">4. Clinical Metrics & Vitals</h2>
                   <div className="grid grid-cols-4 gap-3 mb-4">
                     {[
                       { key: "bloodPressureSystolic" as const },
@@ -432,27 +530,11 @@ export default function ClinicalReportPage() {
                       { key: "hba1c" as const },
                     ].map(({ key }) => {
                       const t = METRIC_TARGETS[key];
-                      return (
-                        <MetricGauge
-                          key={key}
-                          label={t.label}
-                          value={metrics[key]}
-                          min={"min" in t ? t.min : undefined}
-                          max={"max" in t ? t.max : undefined}
-                          unit={t.unit}
-                        />
-                      );
+                      return <MetricGauge key={key} label={t.label} value={metrics[key]} min={"min" in t ? t.min : undefined} max={"max" in t ? t.max : undefined} unit={t.unit} />;
                     })}
                   </div>
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Metric</th>
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Recorded Value</th>
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Target Range</th>
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Status</th>
-                      </tr>
-                    </thead>
+                    <thead><tr className="bg-gray-50"><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Metric</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Recorded Value</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Target Range</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Status</th></tr></thead>
                     <tbody>
                       {[
                         { label: "Blood Pressure", val: String(metrics.bloodPressureSystolic) + "/" + String(metrics.bloodPressureDiastolic) + " mmHg", target: "< 130/80 mmHg", key: "bloodPressureSystolic" as const },
@@ -462,38 +544,33 @@ export default function ClinicalReportPage() {
                         { label: "Fasting Glucose", val: String(metrics.glucoseFasting) + " mg/dL", target: "< 126 mg/dL", key: "glucoseFasting" as const },
                         { label: "Postprandial Glucose", val: String(metrics.glucosePostPrandial) + " mg/dL", target: "< 180 mg/dL", key: "glucosePostPrandial" as const },
                       ].map((item) => {
-                        const status = getMetricStatus(item.key, metrics[item.key]);
-                        const sc = status === "Normal" ? "text-green-700 bg-green-50" : status === "High" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50";
+                        const st = getMetricStatus(item.key, metrics[item.key]);
+                        const sc = st === "Normal" ? "text-green-700 bg-green-50" : st === "High" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50";
                         return (
                           <tr key={item.label} className="border-b border-gray-100">
                             <td className="py-2.5 px-4 text-gray-500">{item.label}</td>
                             <td className="py-2.5 px-4 font-medium">{item.val}</td>
                             <td className="py-2.5 px-4 text-gray-500">{item.target}</td>
-                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{status}</span></td>
+                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
-                  <p className="text-xs text-gray-400 mt-2">Glucose Trends: {metrics.glucoseFasting} mg/dL (fasting) to {metrics.glucosePostPrandial} mg/dL (postprandial). Variability within clinical parameters.</p>
+                  <p className="text-xs text-gray-400 mt-2">Glucose Trends: {metrics.glucoseFasting} mg/dL (fasting) to {metrics.glucosePostPrandial} mg/dL (postprandial).</p>
                 </section>
 
                 <section>
-                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">4. Clinical Summary & Observations</h2>
+                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">5. Clinical Summary & Observations</h2>
                   <div className="bg-[#f0f9fb] rounded-lg p-5 text-sm text-gray-800 leading-relaxed border-l-4 border-[#00647c]">
                     {clinicalSummary}
                   </div>
                 </section>
 
                 <section>
-                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">5. Personalized Management & Action Plan</h2>
+                  <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">6. Personalized Management & Action Plan</h2>
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700 w-1/3">Intervention Area</th>
-                        <th className="text-left py-2.5 px-4 font-semibold text-gray-700">Prescribed Action Plan</th>
-                      </tr>
-                    </thead>
+                    <thead><tr className="bg-gray-50"><th className="text-left py-2.5 px-4 font-semibold text-gray-700 w-1/3">Intervention Area</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Prescribed Action Plan</th></tr></thead>
                     <tbody>
                       {[
                         { label: "Continuous Monitoring", value: actionPlan.continuousMonitoring },
@@ -512,6 +589,45 @@ export default function ClinicalReportPage() {
                   <p>Pune, Maharashtra, India | help@glymee.com</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === "history" && selectedPatient && (
+            <div className="bg-surface rounded-xl border border-outline-variant/10 p-6 no-print">
+              <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Report History</h2>
+              {loadingReports ? (
+                <p className="text-on-surface-variant text-sm">Loading reports...</p>
+              ) : savedReports.length === 0 ? (
+                <p className="text-on-surface-variant text-sm">No reports generated for this patient yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-outline-variant/10">
+                        <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Date</th>
+                        <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Clinician</th>
+                        <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Summary</th>
+                        <th className="text-right py-3 px-4 font-medium text-on-surface-variant">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {savedReports.map((r) => (
+                        <tr key={r.id} className="border-b border-outline-variant/5 hover:bg-surface-container-low">
+                          <td className="py-3 px-4 text-on-surface-variant text-xs">{formatDate(r.createdAt)}</td>
+                          <td className="py-3 px-4 text-on-surface font-medium">{r.clinicianName || "—"}</td>
+                          <td className="py-3 px-4 text-on-surface-variant text-xs truncate max-w-xs">{r.clinicalSummary?.slice(0, 80)}...</td>
+                          <td className="py-3 px-4 text-right">
+                            <button onClick={() => loadReportIntoView(r)} className="text-primary hover:text-primary/80 text-xs font-medium px-3 py-1 rounded hover:bg-primary/5 transition-colors">View</button>
+                            {r.pdfUrl && (
+                              <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-secondary/80 text-xs font-medium px-3 py-1 rounded hover:bg-secondary/5 transition-colors ml-1">PDF</a>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>

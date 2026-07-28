@@ -52,6 +52,20 @@ export const consultations = sqliteTable("consultations", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const clinicalReports = sqliteTable("clinical_reports", {
+  id: text("id").primaryKey(),
+  patientId: text("patient_id").notNull(),
+  pdfUrl: text("pdf_url"),
+  clinicianName: text("clinician_name").notNull().default(""),
+  metricsJson: text("metrics_json").notNull(),
+  lifestyleJson: text("lifestyle_json").notNull(),
+  actionPlanJson: text("action_plan_json").notNull(),
+  clinicalSummary: text("clinical_summary").notNull().default(""),
+  previousInvestigations: text("previous_investigations").notNull().default(""),
+  reportDataJson: text("report_data_json").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const otpCodes = sqliteTable("otp_codes", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
