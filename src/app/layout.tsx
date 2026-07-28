@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ConsultationProvider } from "@/context/ConsultationContext";
 import ConsultationModal from "@/components/ConsultationModal";
 import "./globals.css";
@@ -152,6 +154,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://glymee.com",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/Glymee_logo_1.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: "/Glymee_logo_1.png",
+  },
 };
 
 export default function RootLayout({
@@ -169,7 +178,8 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <link rel="icon" href="/Glymee_logo_1.png" type="image/png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/Glymee_logo_1.png" type="image/png" sizes="512x512" />
         <link rel="apple-touch-icon" href="/Glymee_logo_1.png" />
         <link
           href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
@@ -185,6 +195,8 @@ export default function RootLayout({
           {children}
           <ConsultationModal />
         </ConsultationProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
