@@ -31,14 +31,14 @@ interface SavedReport {
 }
 
 interface ClinicalMetrics {
-  bloodPressureSystolic: number;
-  bloodPressureDiastolic: number;
-  heartRate: number;
-  bmi: number;
-  weight: number;
-  hba1c: number;
-  glucoseFasting: number;
-  glucosePostPrandial: number;
+  bloodPressureSystolic: number | "";
+  bloodPressureDiastolic: number | "";
+  heartRate: number | "";
+  bmi: number | "";
+  weight: number | "";
+  hba1c: number | "";
+  glucoseFasting: number | "";
+  glucosePostPrandial: number | "";
 }
 
 interface LifestyleAssessment {
@@ -56,16 +56,12 @@ interface ActionPlan {
   followUpSchedule: string;
 }
 
-const METRIC_TARGETS = {
-  bloodPressureSystolic: { max: 130, unit: "mmHg", label: "Systolic BP" },
-  bloodPressureDiastolic: { max: 80, unit: "mmHg", label: "Diastolic BP" },
-  heartRate: { min: 60, max: 100, unit: "bpm", label: "Heart Rate" },
-  bmi: { min: 18.5, max: 24.9, unit: "kg/m2", label: "BMI" },
-  weight: { unit: "kg", label: "Weight" },
-  hba1c: { max: 7.0, unit: "%", label: "HbA1c" },
-  glucoseFasting: { max: 126, unit: "mg/dL", label: "Fasting Glucose" },
-  glucosePostPrandial: { max: 180, unit: "mg/dL", label: "Postprandial Glucose" },
-};
+interface MetricTarget {
+  min?: number;
+  max?: number;
+  unit: string;
+  label: string;
+}
 
 function MetricGauge({ label, value, min, max, unit }: { label: string; value: number; min?: number; max?: number; unit: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +113,32 @@ function MetricGauge({ label, value, min, max, unit }: { label: string; value: n
   );
 }
 
+const EMPTY_METRICS: ClinicalMetrics = {
+  bloodPressureSystolic: "",
+  bloodPressureDiastolic: "",
+  heartRate: "",
+  bmi: "",
+  weight: "",
+  hba1c: "",
+  glucoseFasting: "",
+  glucosePostPrandial: "",
+};
+
+const EMPTY_LIFESTYLE: LifestyleAssessment = {
+  dietaryPattern: "",
+  hydrationStatus: "",
+  physicalActivity: "",
+  substanceUse: "",
+  sleepStress: "",
+};
+
+const EMPTY_ACTION_PLAN: ActionPlan = {
+  continuousMonitoring: "",
+  dietaryOptimization: "",
+  physicalActivityPlan: "",
+  followUpSchedule: "",
+};
+
 export default function ClinicalReportPage() {
   const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -124,7 +146,7 @@ export default function ClinicalReportPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
-  const [clinicianName, setClinicianName] = useState("Dr. [Clinician Name]");
+  const [clinicianName, setClinicianName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -132,40 +154,34 @@ export default function ClinicalReportPage() {
   const reportRef = useRef<HTMLDivElement>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [metricTargets, setMetricTargets] = useState<Record<string, MetricTarget>>({});
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
-  const [metrics, setMetrics] = useState<ClinicalMetrics>({
-    bloodPressureSystolic: 120,
-    bloodPressureDiastolic: 80,
-    heartRate: 72,
-    bmi: 24.5,
-    weight: 70,
-    hba1c: 6.8,
-    glucoseFasting: 110,
-    glucosePostPrandial: 150,
-  });
+  const [metrics, setMetrics] = useState<ClinicalMetrics>({ ...EMPTY_METRICS });
+  const [lifestyle, setLifestyle] = useState<LifestyleAssessment>({ ...EMPTY_LIFESTYLE });
+  const [actionPlan, setActionPlan] = useState<ActionPlan>({ ...EMPTY_ACTION_PLAN });
+  const [clinicalSummary, setClinicalSummary] = useState("");
+  const [previousInvestigations, setPreviousInvestigations] = useState("");
 
-  const [lifestyle, setLifestyle] = useState<LifestyleAssessment>({
-    dietaryPattern: "Mixed diet with occasional high-carb meals. Inconsistent meal timing.",
-    hydrationStatus: "Approximately 1.5L daily water intake. Below recommended 2-3L.",
-    physicalActivity: "Sedentary desk job. Walks 2-3 times per week, 20 min each.",
-    substanceUse: "Non-smoker. Occasional social alcohol consumption (1-2 drinks/week).",
-    sleepStress: "Reports 6-7 hours sleep. Moderate daytime fatigue. Workplace stress noted.",
-  });
-
-  const [actionPlan, setActionPlan] = useState<ActionPlan>({
-    continuousMonitoring: "Daily fasting and postprandial glucose logging. Consider CGM if HbA1c remains above target.",
-    dietaryOptimization: "Reduce refined carbohydrates. Increase fiber intake to 25-30g/day. Distribute meals evenly.",
-    physicalActivityPlan: "150 min/week moderate aerobic activity. Add resistance training 2x/week.",
-    followUpSchedule: "Follow-up in 3 months for HbA1c review. Quarterly clinical assessment thereafter.",
-  });
-
-  const [clinicalSummary, setClinicalSummary] = useState(
-    "Patient presents with [type] diabetes managed on [medications]. Metabolic control is [well-controlled/moderate/suboptimal] with HbA1c at [value]. Lifestyle assessment reveals [key findings]. Primary risk factors include [risks]. Recommended intervention focuses on [plan summary]."
-  );
-
-  const [previousInvestigations, setPreviousInvestigations] = useState(
-    "No prior investigations on record."
-  );
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        const s = data.settings || {};
+        const targets: Record<string, MetricTarget> = {
+          bloodPressureSystolic: { max: parseFloat(s.bloodPressureSystolic_max) || 130, unit: "mmHg", label: "Systolic BP" },
+          bloodPressureDiastolic: { max: parseFloat(s.bloodPressureDiastolic_max) || 80, unit: "mmHg", label: "Diastolic BP" },
+          heartRate: { min: parseFloat(s.heartRate_min) || 60, max: parseFloat(s.heartRate_max) || 100, unit: "bpm", label: "Heart Rate" },
+          bmi: { min: parseFloat(s.bmi_min) || 18.5, max: parseFloat(s.bmi_max) || 24.9, unit: "kg/m2", label: "BMI" },
+          weight: { unit: "kg", label: "Weight" },
+          hba1c: { max: parseFloat(s.hba1c_max) || 7.0, unit: "%", label: "HbA1c" },
+          glucoseFasting: { max: parseFloat(s.glucoseFasting_max) || 126, unit: "mg/dL", label: "Fasting Glucose" },
+          glucosePostPrandial: { max: parseFloat(s.glucosePostPrandial_max) || 180, unit: "mg/dL", label: "Postprandial Glucose" },
+        };
+        setMetricTargets(targets);
+      })
+      .finally(() => setSettingsLoading(false));
+  }, []);
 
   function loadPatients() {
     fetch("/api/admin/auth/me")
@@ -192,27 +208,41 @@ export default function ClinicalReportPage() {
     if (!selectedPatient) { setPatient(null); setSavedReports([]); return; }
     fetch("/api/admin/patients/" + selectedPatient)
       .then((r) => r.json())
-      .then((data) => {
-        setPatient(data.patient);
-        const p = data.patient;
-        setClinicalSummary(
-          "Patient presents with " + (p.diabetesType || "unspecified") + " diabetes managed on " + (p.currentMedications || "current medications") + ". Metabolic control assessment with HbA1c at " + metrics.hba1c + "%. Lifestyle assessment reveals metabolic imbalances. Primary risk factors to be addressed. Recommended intervention focuses on glycemic optimization and lifestyle modification."
-        );
-      })
+      .then((data) => setPatient(data.patient))
       .catch(() => setPatient(null));
     loadSavedReports(selectedPatient);
   }, [selectedPatient]);
 
   function handleMetricChange(key: keyof ClinicalMetrics, value: string) {
+    if (value === "") {
+      setMetrics((prev) => ({ ...prev, [key]: "" }));
+      return;
+    }
     const num = parseFloat(value);
     if (isNaN(num)) return;
     setMetrics((prev) => ({ ...prev, [key]: num }));
   }
 
-  function getMetricStatus(key: keyof typeof METRIC_TARGETS, value: number): string {
-    const target = METRIC_TARGETS[key];
-    if (!("min" in target) && "max" in target) return value <= target.max ? "Normal" : "High";
-    if ("min" in target && "max" in target) return value >= target.min && value <= target.max ? "Normal" : value < target.min ? "Low" : "High";
+  function buildMetricTargets() {
+    const t = metricTargets;
+    return {
+      bloodPressureSystolic: { max: t.bloodPressureSystolic?.max ?? 130, unit: "mmHg", label: "Systolic BP" },
+      bloodPressureDiastolic: { max: t.bloodPressureDiastolic?.max ?? 80, unit: "mmHg", label: "Diastolic BP" },
+      heartRate: { min: t.heartRate?.min ?? 60, max: t.heartRate?.max ?? 100, unit: "bpm", label: "Heart Rate" },
+      bmi: { min: t.bmi?.min ?? 18.5, max: t.bmi?.max ?? 24.9, unit: "kg/m2", label: "BMI" },
+      weight: { unit: "kg", label: "Weight" },
+      hba1c: { max: t.hba1c?.max ?? 7.0, unit: "%", label: "HbA1c" },
+      glucoseFasting: { max: t.glucoseFasting?.max ?? 126, unit: "mg/dL", label: "Fasting Glucose" },
+      glucosePostPrandial: { max: t.glucosePostPrandial?.max ?? 180, unit: "mg/dL", label: "Postprandial Glucose" },
+    };
+  }
+
+  function getMetricStatus(key: string, value: number): string {
+    const targets = buildMetricTargets();
+    const target = (targets as any)[key] as MetricTarget;
+    if (!target) return "";
+    if (!("min" in target) && "max" in target) return value <= (target.max ?? Infinity) ? "Normal" : "High";
+    if ("min" in target && "max" in target) return value >= (target.min ?? -Infinity) && value <= (target.max ?? Infinity) ? "Normal" : value < (target.min ?? -Infinity) ? "Low" : "High";
     return "";
   }
 
@@ -277,10 +307,10 @@ export default function ClinicalReportPage() {
       const l = JSON.parse((report as any).lifestyleJson || "{}");
       const a = JSON.parse((report as any).actionPlanJson || "{}");
 
-      setClinicianName(report.clinicianName || "Dr. [Clinician Name]");
-      if (m.bloodPressureSystolic) setMetrics(m);
-      if (l.dietaryPattern) setLifestyle(l);
-      if (a.continuousMonitoring) setActionPlan(a);
+      setClinicianName(report.clinicianName || "");
+      if (m.bloodPressureSystolic != null) setMetrics(m);
+      if (l.dietaryPattern != null) setLifestyle(l);
+      if (a.continuousMonitoring != null) setActionPlan(a);
       setClinicalSummary(report.clinicalSummary || "");
       setPreviousInvestigations((report as any).previousInvestigations || "");
       setGenerated(true);
@@ -296,13 +326,15 @@ export default function ClinicalReportPage() {
 
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-on-surface-variant">Loading...</div>
       </div>
     );
   }
+
+  const T = buildMetricTargets();
 
   return (
     <div className="min-h-screen bg-surface-container-low">
@@ -371,39 +403,36 @@ export default function ClinicalReportPage() {
                 <>
                   <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
                     <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Clinician Details</h2>
-                    <input type="text" value={clinicianName} onChange={(e) => setClinicianName(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="Dr. [Clinician Name & Credentials]" />
+                    <input type="text" value={clinicianName} onChange={(e) => setClinicianName(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g. Dr. Adhar Battulwar, MD (General Medicine)" />
                   </div>
 
                   <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
                     <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Clinical Metrics & Vitals</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                       {[
-                        { key: "bloodPressureSystolic" as const, label: "Systolic BP", unit: "mmHg" },
-                        { key: "bloodPressureDiastolic" as const, label: "Diastolic BP", unit: "mmHg" },
-                        { key: "heartRate" as const, label: "Heart Rate", unit: "bpm" },
-                        { key: "bmi" as const, label: "BMI", unit: "kg/m2" },
-                        { key: "weight" as const, label: "Weight", unit: "kg" },
-                        { key: "hba1c" as const, label: "HbA1c", unit: "%" },
-                        { key: "glucoseFasting" as const, label: "Fasting Glucose", unit: "mg/dL" },
-                        { key: "glucosePostPrandial" as const, label: "Postprandial Glucose", unit: "mg/dL" },
-                      ].map(({ key, label, unit }) => (
+                        { key: "bloodPressureSystolic" as const, label: "Systolic BP", unit: "mmHg", placeholder: "e.g. 120" },
+                        { key: "bloodPressureDiastolic" as const, label: "Diastolic BP", unit: "mmHg", placeholder: "e.g. 80" },
+                        { key: "heartRate" as const, label: "Heart Rate", unit: "bpm", placeholder: "e.g. 72" },
+                        { key: "bmi" as const, label: "BMI", unit: "kg/m2", placeholder: "e.g. 24.5" },
+                        { key: "weight" as const, label: "Weight", unit: "kg", placeholder: "e.g. 70" },
+                        { key: "hba1c" as const, label: "HbA1c", unit: "%", placeholder: "e.g. 6.8" },
+                        { key: "glucoseFasting" as const, label: "Fasting Glucose", unit: "mg/dL", placeholder: "e.g. 110" },
+                        { key: "glucosePostPrandial" as const, label: "Postprandial Glucose", unit: "mg/dL", placeholder: "e.g. 150" },
+                      ].map(({ key, label, unit, placeholder }) => (
                         <div key={key}>
                           <label className="block text-xs text-on-surface-variant mb-1">{label} ({unit})</label>
-                          <input type="number" value={metrics[key]} onChange={(e) => handleMetricChange(key, e.target.value)} step="0.1" className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                          <input type="number" value={metrics[key] === "" ? "" : metrics[key]} onChange={(e) => handleMetricChange(key, e.target.value)} step="0.1" placeholder={placeholder} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                       ))}
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {[
-                        { key: "bloodPressureSystolic" as const },
-                        { key: "heartRate" as const },
-                        { key: "bmi" as const },
-                        { key: "hba1c" as const },
-                      ].map(({ key }) => {
-                        const t = METRIC_TARGETS[key];
-                        return (
-                          <MetricGauge key={key} label={t.label} value={metrics[key]} min={"min" in t ? t.min : undefined} max={"max" in t ? t.max : undefined} unit={t.unit} />
-                        );
+                      {(["bloodPressureSystolic", "heartRate", "bmi", "hba1c"] as const).map((key) => {
+                        const t = T[key];
+                        const val = metrics[key];
+                        if (val === "" || val == null) {
+                          return <div key={key} className="flex flex-col items-center p-3 bg-white rounded-lg border border-gray-100"><p className="text-xs text-gray-400 py-8">Enter {t.label} to see gauge</p></div>;
+                        }
+                        return <MetricGauge key={key} label={t.label} value={val as number} min={"min" in t ? t.min : undefined} max={"max" in t ? t.max : undefined} unit={t.unit} />;
                       })}
                     </div>
                   </div>
@@ -412,15 +441,15 @@ export default function ClinicalReportPage() {
                     <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Lifestyle & Behavioral Assessment</h2>
                     <div className="space-y-4">
                       {[
-                        { key: "dietaryPattern" as const, label: "Dietary Pattern" },
-                        { key: "hydrationStatus" as const, label: "Hydration Status" },
-                        { key: "physicalActivity" as const, label: "Physical Activity" },
-                        { key: "substanceUse" as const, label: "Substance Use" },
-                        { key: "sleepStress" as const, label: "Sleep & Stress" },
-                      ].map(({ key, label }) => (
+                        { key: "dietaryPattern" as const, label: "Dietary Pattern", placeholder: "e.g. Mixed diet with occasional high-carb meals. Inconsistent meal timing." },
+                        { key: "hydrationStatus" as const, label: "Hydration Status", placeholder: "e.g. Approximately 1.5L daily water intake. Below recommended 2-3L." },
+                        { key: "physicalActivity" as const, label: "Physical Activity", placeholder: "e.g. Sedentary desk job. Walks 2-3 times per week, 20 min each." },
+                        { key: "substanceUse" as const, label: "Substance Use", placeholder: "e.g. Non-smoker. Occasional social alcohol consumption (1-2 drinks/week)." },
+                        { key: "sleepStress" as const, label: "Sleep & Stress", placeholder: "e.g. Reports 6-7 hours sleep. Moderate daytime fatigue. Workplace stress noted." },
+                      ].map(({ key, label, placeholder }) => (
                         <div key={key}>
                           <label className="block text-xs text-on-surface-variant mb-1">{label}</label>
-                          <textarea value={lifestyle[key]} onChange={(e) => setLifestyle((prev) => ({ ...prev, [key]: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                          <textarea value={lifestyle[key]} onChange={(e) => setLifestyle((prev) => ({ ...prev, [key]: e.target.value }))} rows={2} placeholder={placeholder} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                       ))}
                     </div>
@@ -428,21 +457,21 @@ export default function ClinicalReportPage() {
 
                   <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
                     <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Previous Investigations</h2>
-                    <textarea value={previousInvestigations} onChange={(e) => setPreviousInvestigations(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="List any prior lab reports, imaging, or specialist consultations..." />
+                    <textarea value={previousInvestigations} onChange={(e) => setPreviousInvestigations(e.target.value)} rows={3} placeholder="e.g. HbA1c (3 months ago): 7.2% — Fasting Glucose (1 month ago): 128 mg/dL — Lipid Profile: TC 210, LDL 130, HDL 38, TG 180 — Reports from endocrinologist dated Jan 2026..." className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                   </div>
 
                   <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
                     <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Management & Action Plan</h2>
                     <div className="space-y-4">
                       {[
-                        { key: "continuousMonitoring" as const, label: "Continuous Monitoring" },
-                        { key: "dietaryOptimization" as const, label: "Dietary Optimization" },
-                        { key: "physicalActivityPlan" as const, label: "Physical Activity" },
-                        { key: "followUpSchedule" as const, label: "Follow-up Schedule" },
-                      ].map(({ key, label }) => (
+                        { key: "continuousMonitoring" as const, label: "Continuous Monitoring", placeholder: "e.g. Daily fasting and postprandial glucose logging. Consider CGM if HbA1c remains above target." },
+                        { key: "dietaryOptimization" as const, label: "Dietary Optimization", placeholder: "e.g. Reduce refined carbohydrates. Increase fiber intake to 25-30g/day. Distribute meals evenly." },
+                        { key: "physicalActivityPlan" as const, label: "Physical Activity", placeholder: "e.g. 150 min/week moderate aerobic activity. Add resistance training 2x/week." },
+                        { key: "followUpSchedule" as const, label: "Follow-up Schedule", placeholder: "e.g. Follow-up in 3 months for HbA1c review. Quarterly clinical assessment thereafter." },
+                      ].map(({ key, label, placeholder }) => (
                         <div key={key}>
                           <label className="block text-xs text-on-surface-variant mb-1">{label}</label>
-                          <textarea value={actionPlan[key]} onChange={(e) => setActionPlan((prev) => ({ ...prev, [key]: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                          <textarea value={actionPlan[key]} onChange={(e) => setActionPlan((prev) => ({ ...prev, [key]: e.target.value }))} rows={2} placeholder={placeholder} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                       ))}
                     </div>
@@ -450,7 +479,7 @@ export default function ClinicalReportPage() {
 
                   <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
                     <h2 className="font-headline-md text-lg font-semibold text-on-surface mb-4">Clinical Summary & Observations</h2>
-                    <textarea value={clinicalSummary} onChange={(e) => setClinicalSummary(e.target.value)} rows={4} className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                    <textarea value={clinicalSummary} onChange={(e) => setClinicalSummary(e.target.value)} rows={4} placeholder="e.g. Patient presents with Type 2 diabetes managed on Metformin 500 mg BD. Metabolic control is moderate with HbA1c at 7.2%. Lifestyle assessment reveals sedentary routine and suboptimal dietary patterns. Primary risk factors include central obesity and family history of CVD. Recommended intervention focuses on glycemic optimization and lifestyle modification." className="w-full px-3 py-2 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                   </div>
 
                   <div className="flex justify-end no-print">
@@ -475,7 +504,7 @@ export default function ClinicalReportPage() {
                   <div><span className="text-gray-500">Patient Name:</span><p className="font-semibold text-gray-900">{patient.fullName}</p></div>
                   <div><span className="text-gray-500">Age / Gender:</span><p className="font-semibold text-gray-900">{patient.age} / {patient.gender}</p></div>
                   <div><span className="text-gray-500">Assessment Date:</span><p className="font-semibold text-gray-900">{today}</p></div>
-                  <div><span className="text-gray-500">Primary Clinician:</span><p className="font-semibold text-gray-900">{clinicianName}</p></div>
+                  <div><span className="text-gray-500">Primary Clinician:</span><p className="font-semibold text-gray-900">{clinicianName || "Not specified"}</p></div>
                 </div>
 
                 <div>
@@ -507,7 +536,7 @@ export default function ClinicalReportPage() {
                         { label: "Substance Use", value: lifestyle.substanceUse },
                         { label: "Sleep & Stress", value: lifestyle.sleepStress },
                       ].map((item) => (
-                        <tr key={item.label} className="border-b border-gray-100"><td className="py-2.5 px-4 text-gray-500 align-top">{item.label}</td><td className="py-2.5 px-4">{item.value}</td></tr>
+                        <tr key={item.label} className="border-b border-gray-100"><td className="py-2.5 px-4 text-gray-500 align-top">{item.label}</td><td className="py-2.5 px-4">{item.value || "—"}</td></tr>
                       ))}
                     </tbody>
                   </table>
@@ -523,47 +552,111 @@ export default function ClinicalReportPage() {
                 <section>
                   <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">4. Clinical Metrics & Vitals</h2>
                   <div className="grid grid-cols-4 gap-3 mb-4">
-                    {[
-                      { key: "bloodPressureSystolic" as const },
-                      { key: "heartRate" as const },
-                      { key: "bmi" as const },
-                      { key: "hba1c" as const },
-                    ].map(({ key }) => {
-                      const t = METRIC_TARGETS[key];
-                      return <MetricGauge key={key} label={t.label} value={metrics[key]} min={"min" in t ? t.min : undefined} max={"max" in t ? t.max : undefined} unit={t.unit} />;
+                    {(["bloodPressureSystolic", "heartRate", "bmi", "hba1c"] as const).map((key) => {
+                      const t = T[key];
+                      const val = metrics[key];
+                      if (val === "" || val == null) return null;
+                      return <MetricGauge key={key} label={t.label} value={val as number} min={"min" in t ? t.min : undefined} max={"max" in t ? t.max : undefined} unit={t.unit} />;
                     })}
                   </div>
                   <table className="w-full text-sm">
                     <thead><tr className="bg-gray-50"><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Metric</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Recorded Value</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Target Range</th><th className="text-left py-2.5 px-4 font-semibold text-gray-700">Status</th></tr></thead>
                     <tbody>
-                      {[
-                        { label: "Blood Pressure", val: String(metrics.bloodPressureSystolic) + "/" + String(metrics.bloodPressureDiastolic) + " mmHg", target: "< 130/80 mmHg", key: "bloodPressureSystolic" as const },
-                        { label: "Heart Rate", val: String(metrics.heartRate) + " bpm", target: "60-100 bpm", key: "heartRate" as const },
-                        { label: "BMI / Weight", val: String(metrics.bmi) + " kg/m2 (" + String(metrics.weight) + " kg)", target: "18.5-24.9 kg/m2", key: "bmi" as const },
-                        { label: "HbA1c", val: String(metrics.hba1c) + "%", target: "< 7.0%", key: "hba1c" as const },
-                        { label: "Fasting Glucose", val: String(metrics.glucoseFasting) + " mg/dL", target: "< 126 mg/dL", key: "glucoseFasting" as const },
-                        { label: "Postprandial Glucose", val: String(metrics.glucosePostPrandial) + " mg/dL", target: "< 180 mg/dL", key: "glucosePostPrandial" as const },
-                      ].map((item) => {
-                        const st = getMetricStatus(item.key, metrics[item.key]);
+                      {(metrics.bloodPressureSystolic !== "" || metrics.bloodPressureDiastolic !== "") && (() => {
+                        const sys = metrics.bloodPressureSystolic || 0;
+                        const dia = metrics.bloodPressureDiastolic || 0;
+                        const st = getMetricStatus("bloodPressureSystolic", sys as number);
                         const sc = st === "Normal" ? "text-green-700 bg-green-50" : st === "High" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50";
                         return (
-                          <tr key={item.label} className="border-b border-gray-100">
-                            <td className="py-2.5 px-4 text-gray-500">{item.label}</td>
-                            <td className="py-2.5 px-4 font-medium">{item.val}</td>
-                            <td className="py-2.5 px-4 text-gray-500">{item.target}</td>
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2.5 px-4 text-gray-500">Blood Pressure</td>
+                            <td className="py-2.5 px-4 font-medium">{sys}/{dia} mmHg</td>
+                            <td className="py-2.5 px-4 text-gray-500">&lt; {T.bloodPressureSystolic.max}/{T.bloodPressureDiastolic.max} mmHg</td>
                             <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
                           </tr>
                         );
-                      })}
+                      })()}
+                      {(metrics.heartRate !== "") && (() => {
+                        const hr = metrics.heartRate as number;
+                        const st = getMetricStatus("heartRate", hr);
+                        const sc = st === "Normal" ? "text-green-700 bg-green-50" : st === "High" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50";
+                        return (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2.5 px-4 text-gray-500">Heart Rate</td>
+                            <td className="py-2.5 px-4 font-medium">{hr} bpm</td>
+                            <td className="py-2.5 px-4 text-gray-500">{T.heartRate.min}-{T.heartRate.max} bpm</td>
+                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
+                          </tr>
+                        );
+                      })()}
+                      {(metrics.bmi !== "" || metrics.weight !== "") && (() => {
+                        const bmi = (metrics.bmi as number) || 0;
+                        const st = getMetricStatus("bmi", bmi);
+                        const sc = st === "Normal" ? "text-green-700 bg-green-50" : st === "High" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50";
+                        return (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2.5 px-4 text-gray-500">BMI / Weight</td>
+                            <td className="py-2.5 px-4 font-medium">{bmi} kg/m2{metrics.weight !== "" ? ` (${metrics.weight} kg)` : ""}</td>
+                            <td className="py-2.5 px-4 text-gray-500">{T.bmi.min}-{T.bmi.max} kg/m2</td>
+                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
+                          </tr>
+                        );
+                      })()}
+                      {(metrics.hba1c !== "") && (() => {
+                        const hba = metrics.hba1c as number;
+                        const st = getMetricStatus("hba1c", hba);
+                        const sc = st === "Normal" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50";
+                        return (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2.5 px-4 text-gray-500">HbA1c</td>
+                            <td className="py-2.5 px-4 font-medium">{hba}%</td>
+                            <td className="py-2.5 px-4 text-gray-500">&lt; {T.hba1c.max}%</td>
+                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
+                          </tr>
+                        );
+                      })()}
+                      {(metrics.glucoseFasting !== "") && (() => {
+                        const gl = metrics.glucoseFasting as number;
+                        const st = getMetricStatus("glucoseFasting", gl);
+                        const sc = st === "Normal" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50";
+                        return (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2.5 px-4 text-gray-500">Fasting Glucose</td>
+                            <td className="py-2.5 px-4 font-medium">{gl} mg/dL</td>
+                            <td className="py-2.5 px-4 text-gray-500">&lt; {T.glucoseFasting.max} mg/dL</td>
+                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
+                          </tr>
+                        );
+                      })()}
+                      {(metrics.glucosePostPrandial !== "") && (() => {
+                        const gl = metrics.glucosePostPrandial as number;
+                        const st = getMetricStatus("glucosePostPrandial", gl);
+                        const sc = st === "Normal" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50";
+                        return (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2.5 px-4 text-gray-500">Postprandial Glucose</td>
+                            <td className="py-2.5 px-4 font-medium">{gl} mg/dL</td>
+                            <td className="py-2.5 px-4 text-gray-500">&lt; {T.glucosePostPrandial.max} mg/dL</td>
+                            <td className="py-2.5 px-4"><span className={"inline-block px-2 py-0.5 rounded-full text-xs font-medium " + sc}>{st}</span></td>
+                          </tr>
+                        );
+                      })()}
+                      {metrics.bloodPressureSystolic === "" && metrics.heartRate === "" && metrics.bmi === "" && metrics.hba1c === "" && metrics.glucoseFasting === "" && metrics.glucosePostPrandial === "" && (
+                        <tr><td className="py-4 px-4 text-gray-400 text-center" colSpan={4}>No metric data recorded.</td></tr>
+                      )}
                     </tbody>
                   </table>
-                  <p className="text-xs text-gray-400 mt-2">Glucose Trends: {metrics.glucoseFasting} mg/dL (fasting) to {metrics.glucosePostPrandial} mg/dL (postprandial).</p>
+                  {(metrics.glucoseFasting !== "" || metrics.glucosePostPrandial !== "") && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Glucose Trends: {metrics.glucoseFasting || "—"} mg/dL (fasting) to {metrics.glucosePostPrandial || "—"} mg/dL (postprandial).
+                    </p>
+                  )}
                 </section>
 
                 <section>
                   <h2 className="text-lg font-bold text-[#00647c] border-b-2 border-[#00647c] pb-1 mb-4">5. Clinical Summary & Observations</h2>
                   <div className="bg-[#f0f9fb] rounded-lg p-5 text-sm text-gray-800 leading-relaxed border-l-4 border-[#00647c]">
-                    {clinicalSummary}
+                    {clinicalSummary || "No clinical summary provided."}
                   </div>
                 </section>
 
@@ -578,7 +671,7 @@ export default function ClinicalReportPage() {
                         { label: "Physical Activity", value: actionPlan.physicalActivityPlan },
                         { label: "Follow-up Schedule", value: actionPlan.followUpSchedule },
                       ].map((item) => (
-                        <tr key={item.label} className="border-b border-gray-100"><td className="py-2.5 px-4 text-gray-500 align-top">{item.label}</td><td className="py-2.5 px-4">{item.value}</td></tr>
+                        <tr key={item.label} className="border-b border-gray-100"><td className="py-2.5 px-4 text-gray-500 align-top">{item.label}</td><td className="py-2.5 px-4">{item.value || "—"}</td></tr>
                       ))}
                     </tbody>
                   </table>

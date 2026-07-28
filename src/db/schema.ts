@@ -66,6 +66,12 @@ export const clinicalReports = sqliteTable("clinical_reports", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
 export const otpCodes = sqliteTable("otp_codes", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
