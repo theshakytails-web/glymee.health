@@ -12,12 +12,21 @@ const emptyForm = {
   phone: "",
   city: "",
   state: "",
+  address: "",
+  occupation: "",
+  maritalStatus: "",
+  religion: "",
+  education: "",
+  chiefComplaint: "",
+  diagnosis: "",
   diabetesType: "",
   diagnosisDuration: "",
   currentMedications: "",
   mainConcern: "",
   referralSource: "",
   additionalNotes: "",
+  fee: "",
+  nextFollowUp: "",
   status: "pending",
 };
 
@@ -103,6 +112,50 @@ export default function NewPatientPage() {
                   </select>
                 </Field>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Marital Status">
+                  <select
+                    value={form.maritalStatus}
+                    onChange={(e) => set("maritalStatus", e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">Select</option>
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Divorced">Divorced</option>
+                    <option value="Widowed">Widowed</option>
+                  </select>
+                </Field>
+                <Field label="Occupation">
+                  <input
+                    type="text"
+                    value={form.occupation}
+                    onChange={(e) => set("occupation", e.target.value)}
+                    placeholder="e.g. Software Engineer"
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Religion">
+                  <input
+                    type="text"
+                    value={form.religion}
+                    onChange={(e) => set("religion", e.target.value)}
+                    placeholder="e.g. Hindu"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Education">
+                  <input
+                    type="text"
+                    value={form.education}
+                    onChange={(e) => set("education", e.target.value)}
+                    placeholder="e.g. Graduate"
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
             </Section>
 
             <Section title="Contact Information">
@@ -146,6 +199,36 @@ export default function NewPatientPage() {
                   />
                 </Field>
               </div>
+              <Field label="Address">
+                <textarea
+                  value={form.address}
+                  onChange={(e) => set("address", e.target.value)}
+                  rows={2}
+                  placeholder="e.g. 123 Main Street, Apartment 4B"
+                  className={inputClass}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Chief Complaints & Diagnosis">
+              <Field label="Chief Complaints">
+                <textarea
+                  value={form.chiefComplaint}
+                  onChange={(e) => set("chiefComplaint", e.target.value)}
+                  rows={3}
+                  placeholder="Patient's primary complaints"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Diagnosis">
+                <input
+                  type="text"
+                  value={form.diagnosis}
+                  onChange={(e) => set("diagnosis", e.target.value)}
+                  placeholder="Primary diagnosis"
+                  className={inputClass}
+                />
+              </Field>
             </Section>
 
             <Section title="Health Information">
@@ -193,6 +276,29 @@ export default function NewPatientPage() {
               </Field>
             </Section>
 
+            <Section title="Billing & Follow-up">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Consultation Fee (₹)">
+                  <input
+                    type="number"
+                    value={form.fee}
+                    onChange={(e) => set("fee", e.target.value)}
+                    placeholder="e.g. 500"
+                    min={0}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Next Follow-up Date">
+                  <input
+                    type="date"
+                    value={form.nextFollowUp}
+                    onChange={(e) => set("nextFollowUp", e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
+            </Section>
+
             <Section title="Other Details">
               <Field label="Referral Source">
                 <input
@@ -220,6 +326,7 @@ export default function NewPatientPage() {
                   <option value="pending">Pending</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                  <option value="completed">Completed</option>
                 </select>
               </Field>
             </Section>

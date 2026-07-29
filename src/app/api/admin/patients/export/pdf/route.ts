@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     p.email,
     p.phone,
     `${p.city}, ${p.state}`,
-    p.diabetesType || "-",
+    p.diagnosis || p.diabetesType || "-",
     p.status,
   ]);
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         "Email",
         "Phone",
         "Location",
-        "Diabetes Type",
+        "Diagnosis",
         "Status",
       ],
     ],

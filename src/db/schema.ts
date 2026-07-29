@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 export const admins = sqliteTable("admins", {
   id: text("id").primaryKey(),
@@ -17,13 +17,22 @@ export const patients = sqliteTable("patients", {
   phone: text("phone").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),
+  address: text("address"),
+  occupation: text("occupation"),
+  maritalStatus: text("marital_status"),
+  religion: text("religion"),
+  education: text("education"),
+  chiefComplaint: text("chief_complaint"),
+  diagnosis: text("diagnosis"),
   diabetesType: text("diabetes_type"),
   diagnosisDuration: text("diagnosis_duration"),
   currentMedications: text("current_medications"),
   mainConcern: text("main_concern"),
   referralSource: text("referral_source"),
   additionalNotes: text("additional_notes"),
-  status: text("status", { enum: ["active", "inactive", "pending"] })
+  fee: real("fee").notNull().default(0),
+  nextFollowUp: text("next_follow_up"),
+  status: text("status", { enum: ["active", "inactive", "pending", "completed"] })
     .notNull()
     .default("pending"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -57,12 +66,28 @@ export const clinicalReports = sqliteTable("clinical_reports", {
   patientId: text("patient_id").notNull(),
   pdfUrl: text("pdf_url"),
   clinicianName: text("clinician_name").notNull().default(""),
+  chiefComplaint: text("chief_complaint").notNull().default(""),
   metricsJson: text("metrics_json").notNull(),
   lifestyleJson: text("lifestyle_json").notNull(),
+  clinicalHistoryJson: text("clinical_history_json").notNull().default("{}"),
+  reviewOfSystemsJson: text("review_of_systems_json").notNull().default("{}"),
+  ayurvedicAssessmentJson: text("ayurvedic_assessment_json").notNull().default("{}"),
   actionPlanJson: text("action_plan_json").notNull(),
   clinicalSummary: text("clinical_summary").notNull().default(""),
   previousInvestigations: text("previous_investigations").notNull().default(""),
   reportDataJson: text("report_data_json").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const appointments = sqliteTable("appointments", {
+  id: text("id").primaryKey(),
+  patientId: text("patient_id").notNull(),
+  type: text("type", { enum: ["appointment", "follow_up"] }).notNull(),
+  scheduledDate: text("scheduled_date").notNull(),
+  status: text("status", { enum: ["scheduled", "completed", "cancelled"] })
+    .notNull()
+    .default("scheduled"),
+  notes: text("notes"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
