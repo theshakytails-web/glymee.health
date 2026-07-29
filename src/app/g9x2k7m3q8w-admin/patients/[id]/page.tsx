@@ -13,12 +13,21 @@ interface PatientData {
   phone: string;
   city: string;
   state: string;
+  address: string | null;
+  occupation: string | null;
+  maritalStatus: string | null;
+  religion: string | null;
+  education: string | null;
+  chiefComplaint: string | null;
+  diagnosis: string | null;
   diabetesType: string | null;
   diagnosisDuration: string | null;
   currentMedications: string | null;
   mainConcern: string | null;
   referralSource: string | null;
   additionalNotes: string | null;
+  fee: number | null;
+  nextFollowUp: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -53,12 +62,21 @@ export default function PatientDetailPage({
           phone: data.patient.phone,
           city: data.patient.city,
           state: data.patient.state,
+          address: data.patient.address || "",
+          occupation: data.patient.occupation || "",
+          maritalStatus: data.patient.maritalStatus || "",
+          religion: data.patient.religion || "",
+          education: data.patient.education || "",
+          chiefComplaint: data.patient.chiefComplaint || "",
+          diagnosis: data.patient.diagnosis || "",
           diabetesType: data.patient.diabetesType || "",
           diagnosisDuration: data.patient.diagnosisDuration || "",
           currentMedications: data.patient.currentMedications || "",
           mainConcern: data.patient.mainConcern || "",
           referralSource: data.patient.referralSource || "",
           additionalNotes: data.patient.additionalNotes || "",
+          fee: String(data.patient.fee || ""),
+          nextFollowUp: data.patient.nextFollowUp || "",
           status: data.patient.status,
         });
       })
@@ -172,6 +190,47 @@ export default function PatientDetailPage({
                     </select>
                   </Row>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Row label="Marital Status">
+                    <select
+                      value={form.maritalStatus}
+                      onChange={(e) => set("maritalStatus", e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="">Select</option>
+                      <option value="Single">Single</option>
+                      <option value="Married">Married</option>
+                      <option value="Divorced">Divorced</option>
+                      <option value="Widowed">Widowed</option>
+                    </select>
+                  </Row>
+                  <Row label="Occupation">
+                    <input
+                      type="text"
+                      value={form.occupation}
+                      onChange={(e) => set("occupation", e.target.value)}
+                      className={inputClass}
+                    />
+                  </Row>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Row label="Religion">
+                    <input
+                      type="text"
+                      value={form.religion}
+                      onChange={(e) => set("religion", e.target.value)}
+                      className={inputClass}
+                    />
+                  </Row>
+                  <Row label="Education">
+                    <input
+                      type="text"
+                      value={form.education}
+                      onChange={(e) => set("education", e.target.value)}
+                      className={inputClass}
+                    />
+                  </Row>
+                </div>
               </Card>
 
               <Card title="Contact">
@@ -215,6 +274,33 @@ export default function PatientDetailPage({
                     />
                   </Row>
                 </div>
+                <Row label="Address">
+                  <textarea
+                    value={form.address}
+                    onChange={(e) => set("address", e.target.value)}
+                    rows={2}
+                    className={inputClass}
+                  />
+                </Row>
+              </Card>
+
+              <Card title="Chief Complaints & Diagnosis">
+                <Row label="Chief Complaints">
+                  <textarea
+                    value={form.chiefComplaint}
+                    onChange={(e) => set("chiefComplaint", e.target.value)}
+                    rows={3}
+                    className={inputClass}
+                  />
+                </Row>
+                <Row label="Diagnosis">
+                  <input
+                    type="text"
+                    value={form.diagnosis}
+                    onChange={(e) => set("diagnosis", e.target.value)}
+                    className={inputClass}
+                  />
+                </Row>
               </Card>
 
               <Card title="Health">
@@ -260,6 +346,28 @@ export default function PatientDetailPage({
                 </Row>
               </Card>
 
+              <Card title="Billing & Follow-up">
+                <div className="grid grid-cols-2 gap-4">
+                  <Row label="Consultation Fee (₹)">
+                    <input
+                      type="number"
+                      value={form.fee}
+                      onChange={(e) => set("fee", e.target.value)}
+                      min={0}
+                      className={inputClass}
+                    />
+                  </Row>
+                  <Row label="Next Follow-up Date">
+                    <input
+                      type="date"
+                      value={form.nextFollowUp}
+                      onChange={(e) => set("nextFollowUp", e.target.value)}
+                      className={inputClass}
+                    />
+                  </Row>
+                </div>
+              </Card>
+
               <Card title="Status">
                 <Row label="Status">
                   <select
@@ -270,6 +378,7 @@ export default function PatientDetailPage({
                     <option value="pending">Pending</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
+                    <option value="completed">Completed</option>
                   </select>
                 </Row>
               </Card>
@@ -303,6 +412,11 @@ export default function PatientDetailPage({
                 <InfoRow label="Full Name" value={patient.fullName} />
                 <InfoRow label="Age" value={String(patient.age)} />
                 <InfoRow label="Gender" value={patient.gender} />
+                <InfoRow label="Marital Status" value={patient.maritalStatus || "-"} />
+                <InfoRow label="Occupation" value={patient.occupation || "-"} />
+                <InfoRow label="Religion" value={patient.religion || "-"} />
+                <InfoRow label="Education" value={patient.education || "-"} />
+                <InfoRow label="Diagnosis" value={patient.diagnosis || "-"} />
                 <InfoRow
                   label="Status"
                   value={
@@ -312,7 +426,9 @@ export default function PatientDetailPage({
                           ? "bg-secondary/10 text-secondary"
                           : patient.status === "pending"
                             ? "bg-tertiary/10 text-tertiary"
-                            : "bg-error/10 text-error"
+                            : patient.status === "completed"
+                              ? "bg-primary/10 text-primary"
+                              : "bg-error/10 text-error"
                       }`}
                     >
                       {patient.status}
@@ -326,6 +442,11 @@ export default function PatientDetailPage({
                 <InfoRow label="Phone" value={patient.phone} />
                 <InfoRow label="City" value={patient.city} />
                 <InfoRow label="State" value={patient.state} />
+                <InfoRow label="Address" value={patient.address || "-"} />
+              </Card>
+
+              <Card title="Chief Complaints">
+                <InfoRow label="Chief Complaints" value={patient.chiefComplaint || "-"} />
               </Card>
 
               <Card title="Health Information">
@@ -333,6 +454,11 @@ export default function PatientDetailPage({
                 <InfoRow label="Duration" value={patient.diagnosisDuration || "-"} />
                 <InfoRow label="Medications" value={patient.currentMedications || "-"} />
                 <InfoRow label="Main Concern" value={patient.mainConcern || "-"} />
+              </Card>
+
+              <Card title="Billing & Follow-up">
+                <InfoRow label="Fee (₹)" value={patient.fee ? String(patient.fee) : "-"} />
+                <InfoRow label="Next Follow-up" value={patient.nextFollowUp || "-"} />
               </Card>
 
               <Card title="Other">

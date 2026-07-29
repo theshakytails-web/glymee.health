@@ -166,7 +166,7 @@ export default function PatientsPage() {
                     <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Gender</th>
                     <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Contact</th>
                     <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Location</th>
-                    <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Type</th>
+                    <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Diagnosis</th>
                     <th className="text-left py-3 px-4 font-medium text-on-surface-variant">Status</th>
                     <th className="text-right py-3 px-4 font-medium text-on-surface-variant">Actions</th>
                   </tr>
@@ -198,7 +198,7 @@ export default function PatientsPage() {
                           {p.city}, {p.state}
                         </td>
                         <td className="py-3 px-4 text-on-surface-variant text-xs">
-                          {p.diabetesType || "-"}
+                          {(p as any).diagnosis || p.diabetesType || "-"}
                         </td>
                         <td className="py-3 px-4">
                           <span

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
-import { patients } from "@/db/schema";
-import { sql, eq } from "drizzle-orm";
+import { patients, appointments } from "@/db/schema";
+import { sql, eq, and } from "drizzle-orm";
 
 export async function GET() {
   const admin = await getCurrentAdmin();
@@ -28,6 +28,27 @@ export async function GET() {
     .select({ inactive: sql<number>`count(*)` })
     .from(patients)
     .where(eq(patients.status, "inactive"));
+
+  const [{ completed }] = await db
+    .select({ completed: sql<number>`count(*)` })
+    .from(patients)
+    .where(eq(patients.status, "completed"));
+
+  const [{ totalCollection }] = await db
+    .select({ totalCollection: sql<number>`coalesce(sum(${patients.fee}), 0)` })
+    .from(patients);
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const [{ appointmentsToday }] = await db
+    .select({ appointmentsToday: sql<number>`count(*)` })
+    .from(appointments)
+    .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "appointment")));
+
+  const [{ followUpsDue }] = await db
+    .select({ followUpsDue: sql<number>`count(*)` })
+    .from(appointments)
+    .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "follow_up")));
 
   const diabetesTypes = await db
     .select({
@@ -58,7 +79,10 @@ export async function GET() {
     .limit(5);
 
   return NextResponse.json({
-    overview: { total, active, pending, inactive },
+    overview: { total, active, pending, inactive, completed },
+    totalCollection,
+    appointmentsToday,
+    followUpsDue,
     diabetesTypes: diabetesTypes.map((d) => ({
       name: d.type || "Unknown",
       value: d.count,

@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 interface Stats {
-  overview: { total: number; active: number; pending: number; inactive: number };
+  overview: { total: number; active: number; pending: number; inactive: number; completed: number };
+  totalCollection: number;
+  appointmentsToday: number;
+  followUpsDue: number;
   diabetesTypes: { name: string; value: number }[];
   genderSplit: { name: string; value: number }[];
   recentPatients: {
@@ -85,6 +88,7 @@ export default function AdminDashboard() {
   const statusData = [
     { name: "Active", y: stats.overview.active, color: "#006c49" },
     { name: "Pending", y: stats.overview.pending, color: "#825100" },
+    { name: "Completed", y: stats.overview.completed, color: "#00647c" },
     { name: "Inactive", y: stats.overview.inactive, color: "#ba1a1a" },
   ];
 
@@ -109,12 +113,14 @@ export default function AdminDashboard() {
             Dashboard
           </h1>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             {[
-              { label: "Total Patients", value: stats.overview.total, color: "text-primary" },
-              { label: "Active", value: stats.overview.active, color: "text-secondary" },
-              { label: "Pending", value: stats.overview.pending, color: "text-tertiary" },
-              { label: "Inactive", value: stats.overview.inactive, color: "text-error" },
+              { label: "Total Footfall", value: stats.overview.total, color: "text-primary" },
+              { label: "Enrolled Patients", value: stats.overview.active, color: "text-secondary" },
+              { label: "Total Collection (₹)", value: `₹${stats.totalCollection}`, color: "text-emerald-600" },
+              { label: "Completed", value: stats.overview.completed, color: "text-primary" },
+              { label: "Appointments Today", value: stats.appointmentsToday, color: "text-tertiary" },
+              { label: "Follow-ups Due", value: stats.followUpsDue, color: "text-amber-600" },
             ].map((card) => (
               <div
                 key={card.label}
@@ -181,7 +187,9 @@ export default function AdminDashboard() {
                                 ? "bg-secondary/10 text-secondary"
                                 : p.status === "pending"
                                   ? "bg-tertiary/10 text-tertiary"
-                                  : "bg-error/10 text-error"
+                                  : p.status === "completed"
+                                    ? "bg-primary/10 text-primary"
+                                    : "bg-error/10 text-error"
                             }`}
                           >
                             {p.status}

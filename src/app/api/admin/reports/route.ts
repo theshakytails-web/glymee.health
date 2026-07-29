@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { clinicalReports } from "@/db/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const admin = await getCurrentAdmin();
@@ -39,8 +39,12 @@ export async function POST(request: Request) {
     patientId: body.patientId,
     pdfUrl: body.pdfUrl || null,
     clinicianName: body.clinicianName || "",
+    chiefComplaint: body.chiefComplaint || "",
     metricsJson: JSON.stringify(body.metrics || {}),
     lifestyleJson: JSON.stringify(body.lifestyle || {}),
+    clinicalHistoryJson: JSON.stringify(body.clinicalHistory || {}),
+    reviewOfSystemsJson: JSON.stringify(body.reviewOfSystems || {}),
+    ayurvedicAssessmentJson: JSON.stringify(body.ayurvedicAssessment || {}),
     actionPlanJson: JSON.stringify(body.actionPlan || {}),
     clinicalSummary: body.clinicalSummary || "",
     previousInvestigations: body.previousInvestigations || "",

@@ -28,8 +28,8 @@ export async function GET(request: Request) {
       )
     );
   }
-  if (status && ["active", "inactive", "pending"].includes(status)) {
-    conditions.push(eq(patients.status, status as "active" | "inactive" | "pending"));
+  if (status && ["active", "inactive", "pending", "completed"].includes(status)) {
+    conditions.push(eq(patients.status, status as any));
   }
 
   const whereClause = conditions.length > 0 ? sql`${conditions[0]}` : undefined;
@@ -77,12 +77,21 @@ export async function POST(request: Request) {
     phone: data.phone,
     city: data.city,
     state: data.state,
+    address: data.address || null,
+    occupation: data.occupation || null,
+    maritalStatus: data.maritalStatus || null,
+    religion: data.religion || null,
+    education: data.education || null,
+    chiefComplaint: data.chiefComplaint || null,
+    diagnosis: data.diagnosis || null,
     diabetesType: data.diabetesType || null,
     diagnosisDuration: data.diagnosisDuration || null,
     currentMedications: data.currentMedications || null,
     mainConcern: data.mainConcern || null,
     referralSource: data.referralSource || null,
     additionalNotes: data.additionalNotes || null,
+    fee: parseFloat(data.fee) || 0,
+    nextFollowUp: data.nextFollowUp || null,
     status: data.status || "pending",
     createdAt: now,
     updatedAt: now,
