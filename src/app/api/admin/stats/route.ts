@@ -38,17 +38,23 @@ export async function GET() {
     .select({ totalCollection: sql<number>`coalesce(sum(${patients.fee}), 0)` })
     .from(patients);
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const [{ appointmentsToday }] = await db
-    .select({ appointmentsToday: sql<number>`count(*)` })
-    .from(appointments)
-    .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "appointment")));
-
-  const [{ followUpsDue }] = await db
-    .select({ followUpsDue: sql<number>`count(*)` })
-    .from(appointments)
-    .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "follow_up")));
+  let appointmentsToday = 0;
+  let followUpsDue = 0;
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const [aptResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(appointments)
+      .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "appointment")));
+    appointmentsToday = aptResult.count;
+    const [fuResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(appointments)
+      .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "follow_up")));
+    followUpsDue = fuResult.count;
+  } catch {
+    // appointments table may not exist yet - migration needed
+  }
 
   const diabetesTypes = await db
     .select({
