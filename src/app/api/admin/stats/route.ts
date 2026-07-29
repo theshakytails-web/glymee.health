@@ -34,12 +34,17 @@ export async function GET() {
     .from(patients)
     .where(eq(patients.status, "completed"));
 
-  const [{ totalCollection }] = await db
-    .select({ totalCollection: sql<number>`coalesce(sum(${patients.fee}), 0)` })
-    .from(patients);
-
+  let totalCollection = 0;
   let appointmentsToday = 0;
   let followUpsDue = 0;
+  try {
+    const [{ tc }] = await db
+      .select({ tc: sql<number>`coalesce(sum(${patients.fee}), 0)` })
+      .from(patients);
+    totalCollection = tc;
+  } catch {
+    // fee column may not exist yet - run db:push
+  }
   try {
     const today = new Date().toISOString().split("T")[0];
     const [aptResult] = await db
@@ -53,7 +58,7 @@ export async function GET() {
       .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "follow_up")));
     followUpsDue = fuResult.count;
   } catch {
-    // appointments table may not exist yet - migration needed
+    // appointments table may not exist yet - run db:push
   }
 
   const diabetesTypes = await db
