@@ -79,6 +79,16 @@ export const clinicalReports = sqliteTable("clinical_reports", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const payments = sqliteTable("payments", {
+  id: text("id").primaryKey(),
+  patientId: text("patient_id").notNull(),
+  amount: real("amount").notNull(),
+  type: text("type", { enum: ["consultation", "treatment", "medicine", "other"] }).notNull().default("treatment"),
+  paymentDate: text("payment_date").notNull(),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const appointments = sqliteTable("appointments", {
   id: text("id").primaryKey(),
   patientId: text("patient_id").notNull(),

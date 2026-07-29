@@ -1,107 +1,130 @@
 import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
-import { patients, appointments } from "@/db/schema";
+import { patients, appointments, payments } from "@/db/schema";
 import { sql, eq, and } from "drizzle-orm";
 
 export async function GET() {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const [{ total }] = await db
-    .select({ total: sql<number>`count(*)` })
-    .from(patients);
-
-  const [{ active }] = await db
-    .select({ active: sql<number>`count(*)` })
-    .from(patients)
-    .where(eq(patients.status, "active"));
-
-  const [{ pending }] = await db
-    .select({ pending: sql<number>`count(*)` })
-    .from(patients)
-    .where(eq(patients.status, "pending"));
-
-  const [{ inactive }] = await db
-    .select({ inactive: sql<number>`count(*)` })
-    .from(patients)
-    .where(eq(patients.status, "inactive"));
-
-  const [{ completed }] = await db
-    .select({ completed: sql<number>`count(*)` })
-    .from(patients)
-    .where(eq(patients.status, "completed"));
-
-  let totalCollection = 0;
-  let appointmentsToday = 0;
-  let followUpsDue = 0;
   try {
-    const [{ tc }] = await db
-      .select({ tc: sql<number>`coalesce(sum(${patients.fee}), 0)` })
+    const admin = await getCurrentAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)` })
       .from(patients);
-    totalCollection = tc;
-  } catch {
-    // fee column may not exist yet - run db:push
+
+    let active = 0, pending = 0, inactive = 0, completed = 0;
+    try {
+      const r = await db.select({ active: sql<number>`count(*)` }).from(patients).where(eq(patients.status, "active"));
+      active = r[0].active;
+    } catch { /* ok */ }
+    try {
+      const r = await db.select({ pending: sql<number>`count(*)` }).from(patients).where(eq(patients.status, "pending"));
+      pending = r[0].pending;
+    } catch { /* ok */ }
+    try {
+      const r = await db.select({ inactive: sql<number>`count(*)` }).from(patients).where(eq(patients.status, "inactive"));
+      inactive = r[0].inactive;
+    } catch { /* ok */ }
+    try {
+      const r = await db.select({ completed: sql<number>`count(*)` }).from(patients).where(eq(patients.status, "completed"));
+      completed = r[0].completed;
+    } catch { /* ok */ }
+
+    let totalCollection = 0;
+    let appointmentsToday = 0;
+    let followUpsDue = 0;
+    try {
+      const [{ tc }] = await db
+        .select({ tc: sql<number>`coalesce(sum(${patients.fee}), 0)` })
+        .from(patients);
+      totalCollection = tc;
+    } catch {
+      // fee column may not exist yet - run db:push
+    }
+    try {
+      const [{ pc }] = await db
+        .select({ pc: sql<number>`coalesce(sum(${payments.amount}), 0)` })
+        .from(payments);
+      totalCollection += pc;
+    } catch {
+      // payments table may not exist yet - run db:push
+    }
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const [aptResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(appointments)
+        .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "appointment")));
+      appointmentsToday = aptResult.count;
+      const [fuResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(appointments)
+        .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "follow_up")));
+      followUpsDue = fuResult.count;
+    } catch {
+      // appointments table may not exist yet - run db:push
+    }
+
+    let diabetesTypes: { type: string | null; count: number }[] = [];
+    try {
+      diabetesTypes = await db
+        .select({
+          type: patients.diabetesType,
+          count: sql<number>`count(*)`,
+        })
+        .from(patients)
+        .where(sql`${patients.diabetesType} IS NOT NULL AND ${patients.diabetesType} != ''`)
+        .groupBy(patients.diabetesType);
+    } catch { /* ok */ }
+
+    let genderSplit: { gender: string; count: number }[] = [];
+    try {
+      genderSplit = await db
+        .select({
+          gender: patients.gender,
+          count: sql<number>`count(*)`,
+        })
+        .from(patients)
+        .groupBy(patients.gender);
+    } catch { /* ok */ }
+
+    let recentPatients: { id: string; fullName: string; status: string; createdAt: Date }[] = [];
+    try {
+      recentPatients = await db
+        .select({
+          id: patients.id,
+          fullName: patients.fullName,
+          status: patients.status,
+          createdAt: patients.createdAt,
+        })
+        .from(patients)
+        .orderBy(sql`${patients.createdAt} DESC`)
+        .limit(5);
+    } catch { /* ok */ }
+
+    return NextResponse.json({
+      overview: { total, active, pending, inactive, completed },
+      totalCollection,
+      appointmentsToday,
+      followUpsDue,
+      diabetesTypes: diabetesTypes.map((d) => ({
+        name: d.type || "Unknown",
+        value: d.count,
+      })),
+      genderSplit: genderSplit.map((g) => ({
+        name: g.gender,
+        value: g.count,
+      })),
+      recentPatients,
+    });
+  } catch (error) {
+    console.error("Stats API error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    const [aptResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(appointments)
-      .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "appointment")));
-    appointmentsToday = aptResult.count;
-    const [fuResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(appointments)
-      .where(and(eq(appointments.scheduledDate, today), eq(appointments.type, "follow_up")));
-    followUpsDue = fuResult.count;
-  } catch {
-    // appointments table may not exist yet - run db:push
-  }
-
-  const diabetesTypes = await db
-    .select({
-      type: patients.diabetesType,
-      count: sql<number>`count(*)`,
-    })
-    .from(patients)
-    .where(sql`${patients.diabetesType} IS NOT NULL AND ${patients.diabetesType} != ''`)
-    .groupBy(patients.diabetesType);
-
-  const genderSplit = await db
-    .select({
-      gender: patients.gender,
-      count: sql<number>`count(*)`,
-    })
-    .from(patients)
-    .groupBy(patients.gender);
-
-  const recentPatients = await db
-    .select({
-      id: patients.id,
-      fullName: patients.fullName,
-      status: patients.status,
-      createdAt: patients.createdAt,
-    })
-    .from(patients)
-    .orderBy(sql`${patients.createdAt} DESC`)
-    .limit(5);
-
-  return NextResponse.json({
-    overview: { total, active, pending, inactive, completed },
-    totalCollection,
-    appointmentsToday,
-    followUpsDue,
-    diabetesTypes: diabetesTypes.map((d) => ({
-      name: d.type || "Unknown",
-      value: d.count,
-    })),
-    genderSplit: genderSplit.map((g) => ({
-      name: g.gender,
-      value: g.count,
-    })),
-    recentPatients,
-  });
 }
