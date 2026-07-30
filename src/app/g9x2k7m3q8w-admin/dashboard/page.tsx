@@ -65,14 +65,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetch("/api/admin/auth/me")
       .then((r) => {
-        if (!r.ok) throw new Error();
+        if (!r.ok) throw new Error("auth failed");
         return r.json();
       })
-      .then(() => fetch("/api/admin/stats"))
-      .then((r) => r.json())
-      .then(setStats)
-      .catch(() => router.push("/g9x2k7m3q8w-admin"))
-      .finally(() => setLoading(false));
+      .then(() => {
+        fetch("/api/admin/stats")
+          .then(async (r) => {
+            if (r.ok) {
+              setStats(await r.json());
+            } else {
+              console.error("Stats error:", await r.text());
+            }
+          })
+          .catch((err) => console.error("Stats fetch error:", err))
+          .finally(() => setLoading(false));
+      })
+      .catch(() => router.push("/g9x2k7m3q8w-admin"));
   }, [router]);
 
   if (loading) {
@@ -83,7 +91,19 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <div className="min-h-screen bg-surface-container-low">
+        <AdminSidebar />
+        <main className="md:ml-64 p-6 md:p-8">
+          <div className="max-w-7xl mx-auto text-center text-on-surface-variant mt-20">
+            <p>Unable to load dashboard data.</p>
+            <p className="text-sm mt-2">Check the server console for details.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const statusData = [
     { name: "Active", y: stats.overview.active, color: "#006c49" },

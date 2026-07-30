@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
@@ -45,6 +45,19 @@ export default function PatientDetailPage({
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [payments, setPayments] = useState<{ id: string; amount: number; type: string; paymentDate: string; notes: string; createdAt: string }[]>([]);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({ amount: "", type: "treatment", paymentDate: "", notes: "" });
+  const [savingPayment, setSavingPayment] = useState(false);
+
+  const loadPayments = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/payments?patientId=${id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setPayments(data.payments);
+    } catch { /* ignore */ }
+  }, [id]);
 
   useEffect(() => {
     fetch(`/api/admin/patients/${id}`)
@@ -79,9 +92,10 @@ export default function PatientDetailPage({
           nextFollowUp: data.patient.nextFollowUp || "",
           status: data.patient.status,
         });
+        loadPayments();
       })
       .catch(() => router.push("/g9x2k7m3q8w-admin/patients"));
-  }, [id, router]);
+  }, [id, router, loadPayments]);
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -114,6 +128,31 @@ export default function PatientDetailPage({
       setError("Network error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAddPayment(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSavingPayment(true);
+    try {
+      const res = await fetch("/api/admin/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patientId: id, ...paymentForm, amount: parseFloat(paymentForm.amount) }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error || "Failed to add payment");
+        return;
+      }
+      setShowAddPayment(false);
+      setPaymentForm({ amount: "", type: "treatment", paymentDate: "", notes: "" });
+      await loadPayments();
+    } catch {
+      setError("Network error");
+    } finally {
+      setSavingPayment(false);
     }
   }
 
@@ -459,6 +498,84 @@ export default function PatientDetailPage({
               <Card title="Billing & Follow-up">
                 <InfoRow label="Fee (₹)" value={patient.fee ? String(patient.fee) : "-"} />
                 <InfoRow label="Next Follow-up" value={patient.nextFollowUp || "-"} />
+              </Card>
+
+              <Card title="Payments">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-on-surface-variant">
+                    Total: ₹{payments.reduce((s, p) => s + p.amount, 0)}
+                  </span>
+                  <button
+                    onClick={() => setShowAddPayment(!showAddPayment)}
+                    className="text-sm text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    Add Payment
+                  </button>
+                </div>
+
+                {showAddPayment && (
+                  <form onSubmit={handleAddPayment} className="mb-4 p-4 bg-surface-container-low rounded-lg space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-on-surface-variant mb-1">Amount (₹)</label>
+                        <input type="number" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} required min={0} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-on-surface-variant mb-1">Type</label>
+                        <select value={paymentForm.type} onChange={(e) => setPaymentForm({ ...paymentForm, type: e.target.value })} className={inputClass}>
+                          <option value="consultation">Consultation</option>
+                          <option value="treatment">Treatment</option>
+                          <option value="medicine">Medicine</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-on-surface-variant mb-1">Date</label>
+                      <input type="date" value={paymentForm.paymentDate} onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })} required className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-on-surface-variant mb-1">Notes</label>
+                      <input type="text" value={paymentForm.notes} onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })} className={inputClass} placeholder="Optional" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="submit" disabled={savingPayment} className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                        {savingPayment ? "Saving..." : "Save Payment"}
+                      </button>
+                      <button type="button" onClick={() => setShowAddPayment(false)} className="px-4 py-2 text-sm border border-outline-variant/20 rounded-lg text-on-surface-variant">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {payments.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">No payments recorded yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-outline-variant/10">
+                          <th className="text-left py-2 px-2 text-on-surface-variant font-medium">Date</th>
+                          <th className="text-left py-2 px-2 text-on-surface-variant font-medium">Type</th>
+                          <th className="text-right py-2 px-2 text-on-surface-variant font-medium">Amount</th>
+                          <th className="text-left py-2 px-2 text-on-surface-variant font-medium">Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map((p) => (
+                          <tr key={p.id} className="border-b border-outline-variant/5">
+                            <td className="py-2 px-2 text-on-surface">{p.paymentDate}</td>
+                            <td className="py-2 px-2 text-on-surface capitalize">{p.type}</td>
+                            <td className="py-2 px-2 text-on-surface text-right font-medium">₹{p.amount}</td>
+                            <td className="py-2 px-2 text-on-surface-variant">{p.notes || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </Card>
 
               <Card title="Other">
