@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { payments, patients } from "@/db/schema";
-import { sql, eq, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
+
+const PAYMENT_TYPES = ["consultation", "treatment", "medicine", "other"] as const;
 
 export async function GET(request: Request) {
   try {
@@ -45,13 +47,41 @@ export async function POST(request: Request) {
       );
     }
 
+    const parsedAmount = parseFloat(amount);
+    if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json(
+        { error: "amount must be a positive number" },
+        { status: 400 }
+      );
+    }
+
+    if (type && !PAYMENT_TYPES.includes(type)) {
+      return NextResponse.json(
+        { error: `type must be one of: ${PAYMENT_TYPES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    const [patient] = await db
+      .select({ id: patients.id })
+      .from(patients)
+      .where(eq(patients.id, patientId))
+      .limit(1);
+
+    if (!patient) {
+      return NextResponse.json(
+        { error: "Patient not found" },
+        { status: 404 }
+      );
+    }
+
     const id = crypto.randomUUID();
     const now = new Date();
 
     await db.insert(payments).values({
       id,
       patientId,
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       type: type || "treatment",
       paymentDate,
       notes: notes || "",

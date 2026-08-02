@@ -134,4 +134,21 @@ export const otpCodes = sqliteTable("otp_codes", {
   code: text("code").notNull(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   used: integer("used", { mode: "boolean" }).notNull().default(false),
+  attempts: integer("attempts").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const rateLimits = sqliteTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  windowStart: integer("window_start", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const refreshTokens = sqliteTable("refresh_tokens", {
+  id: text("id").primaryKey(),
+  adminId: text("admin_id").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });

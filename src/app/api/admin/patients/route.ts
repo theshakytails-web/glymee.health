@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { patients } from "@/db/schema";
-import { eq, desc, like, or, sql } from "drizzle-orm";
+import { and, eq, desc, like, or, sql } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const admin = await getCurrentAdmin();
@@ -13,8 +13,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || "";
   const status = searchParams.get("status") || "";
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(searchParams.get("limit") || "20") || 20)
+  );
   const offset = (page - 1) * limit;
 
   const conditions = [];
@@ -32,7 +35,8 @@ export async function GET(request: Request) {
     conditions.push(eq(patients.status, status as any));
   }
 
-  const whereClause = conditions.length > 0 ? sql`${conditions[0]}` : undefined;
+  const whereClause =
+    conditions.length > 0 ? and(...(conditions as any[])) : undefined;
 
   const allPatients = await db
     .select()
@@ -67,11 +71,31 @@ export async function POST(request: Request) {
   const data = await request.json();
   const now = new Date();
 
+  const age = data.age === undefined || data.age === null || data.age === ""
+    ? NaN
+    : parseInt(data.age);
+  if (Number.isNaN(age) || !Number.isInteger(age) || age < 1 || age > 150) {
+    return NextResponse.json(
+      { error: "Age must be a whole number between 1 and 150" },
+      { status: 400 }
+    );
+  }
+
+  const fee = data.fee === undefined || data.fee === null || data.fee === ""
+    ? 0
+    : parseFloat(data.fee);
+  if (Number.isNaN(fee) || fee < 0) {
+    return NextResponse.json(
+      { error: "Fee must be a non-negative number" },
+      { status: 400 }
+    );
+  }
+
   const id = crypto.randomUUID();
   await db.insert(patients).values({
     id,
     fullName: data.fullName,
-    age: parseInt(data.age),
+    age,
     gender: data.gender,
     email: data.email,
     phone: data.phone,
@@ -90,7 +114,7 @@ export async function POST(request: Request) {
     mainConcern: data.mainConcern || null,
     referralSource: data.referralSource || null,
     additionalNotes: data.additionalNotes || null,
-    fee: parseFloat(data.fee) || 0,
+    fee,
     nextFollowUp: data.nextFollowUp || null,
     status: data.status || "pending",
     createdAt: now,

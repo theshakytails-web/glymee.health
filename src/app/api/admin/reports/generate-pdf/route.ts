@@ -76,9 +76,14 @@ export async function POST(request: Request) {
   const fileName = `reports/${report.patientId}/${report.id}.pdf`;
   const pdfUrl = await uploadPdf(fileName, pdfBuffer);
 
-  if (pdfUrl) {
-    await db.update(clinicalReports).set({ pdfUrl }).where(eq(clinicalReports.id, reportId));
+  if (!pdfUrl) {
+    return NextResponse.json(
+      { error: "PDF generation failed — could not upload the report file. Please try again." },
+      { status: 500 }
+    );
   }
+
+  await db.update(clinicalReports).set({ pdfUrl }).where(eq(clinicalReports.id, reportId));
 
   return NextResponse.json({ success: true, pdfUrl });
 }

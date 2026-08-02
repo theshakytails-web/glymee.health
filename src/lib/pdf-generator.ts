@@ -48,6 +48,15 @@ interface PdfOptions {
   };
 }
 
+interface PdfContext {
+  doc: jsPDF;
+  pageNum: number;
+}
+
+const PAGE_BOTTOM = 272;
+const HEADER_HEIGHT = 45;
+const CONTENT_TOP = 55;
+
 function drawHeader(doc: jsPDF) {
   doc.setFillColor(0, 100, 124);
   doc.rect(0, 0, 210, 45, "F");
@@ -69,6 +78,21 @@ function drawFooter(doc: jsPDF, pageNum: number) {
   doc.text(`Page ${pageNum}`, 190, 290, { align: "right" });
 }
 
+function addPage(ctx: PdfContext) {
+  ctx.pageNum += 1;
+  ctx.doc.addPage();
+  drawHeader(ctx.doc);
+  drawFooter(ctx.doc, ctx.pageNum);
+}
+
+function ensureSpace(ctx: PdfContext, y: number, needed: number): number {
+  if (y + needed > PAGE_BOTTOM) {
+    addPage(ctx);
+    return CONTENT_TOP;
+  }
+  return y;
+}
+
 function drawSection(doc: jsPDF, y: number, title: string, color: [number, number, number]): number {
   doc.setDrawColor(...color);
   doc.setLineWidth(0.8);
@@ -80,30 +104,49 @@ function drawSection(doc: jsPDF, y: number, title: string, color: [number, numbe
   return y + 12;
 }
 
-function drawTable(doc: jsPDF, y: number, headers: string[], rows: string[][], startX = 20): number {
-  const colW = (170) / headers.length;
-  if (y > 260) { doc.addPage(); y = 40; drawHeader(doc); }
+function drawTable(
+  ctx: PdfContext,
+  y: number,
+  headers: string[],
+  rows: string[][],
+  startX = 20
+): number {
+  const { doc } = ctx;
+  const colW = 170 / headers.length;
+  const rowHeight = 8;
+
+  y = ensureSpace(ctx, y, 12);
   doc.setFontSize(9);
   doc.setFillColor(245, 245, 245);
   headers.forEach((h, i) => {
     doc.setTextColor(80, 80, 80);
     doc.setFont("helvetica", "bold");
     doc.text(h, startX + i * colW + 3, y + 4);
-    doc.rect(startX + i * colW, y, colW, 8, i === 0 ? "F" : "FD");
+    doc.rect(startX + i * colW, y, colW, rowHeight, i === 0 ? "F" : "FD");
   });
-  y += 10;
-  rows.forEach((row, ri) => {
-    if (y > 260) { doc.addPage(); y = 40; drawHeader(doc); }
-    row.forEach((cell, ci) => {
+  y += rowHeight + 2;
+
+  rows.forEach((row) => {
+    doc.setFontSize(9);
+    const cellLines = row.map((cell, ci) => {
+      doc.setFont("helvetica", ci === 1 ? "normal" : "bold");
+      return doc.splitTextToSize(cell, colW - 4);
+    });
+    const lineCount = Math.max(...cellLines.map((l) => l.length));
+    const cellHeight = Math.max(rowHeight, lineCount * 4 + 3);
+
+    y = ensureSpace(ctx, y, cellHeight + 3);
+
+    row.forEach((_cell, ci) => {
       doc.setTextColor(50, 50, 50);
       doc.setFont("helvetica", ci === 1 ? "normal" : "bold");
-      const lines = doc.splitTextToSize(cell, colW - 4);
-      doc.text(lines, startX + ci * colW + 3, y + 4);
+      doc.text(cellLines[ci], startX + ci * colW + 3, y + 3);
     });
     doc.setDrawColor(230, 230, 230);
-    doc.line(startX, y + 8, startX + 170, y + 8);
-    y += 12;
+    doc.line(startX, y + cellHeight, startX + 170, y + cellHeight);
+    y += cellHeight + 2;
   });
+
   return y + 4;
 }
 
@@ -147,10 +190,11 @@ function rangeString(key: string, targets?: PdfOptions["metricTargets"]): string
 
 export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffer {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  let pageNum = 1;
+  const ctx: PdfContext = { doc, pageNum: 1 };
 
   drawHeader(doc);
-  let y = 55;
+  drawFooter(doc, ctx.pageNum);
+  let y = CONTENT_TOP;
 
   doc.setFontSize(9);
   const meta = [
@@ -182,11 +226,12 @@ export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffe
   doc.setTextColor(30, 30, 30);
   doc.setFont("helvetica", "bold");
   const complaintLines = doc.splitTextToSize(data.chiefComplaint, 170);
+  y = ensureSpace(ctx, y, complaintLines.length * 4);
   doc.text(complaintLines, 20, y);
   y += complaintLines.length * 4 + 6;
 
   y = drawSection(doc, y, "1. Clinical & Medical History", [0, 100, 124]);
-  y = drawTable(doc, y,
+  y = drawTable(ctx, y,
     ["Condition / Parameter", "Clinical Status & Details"],
     [
       ["Primary Diagnoses", data.diagnoses],
@@ -196,7 +241,7 @@ export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffe
   );
 
   y = drawSection(doc, y, "2. Lifestyle & Behavioral Assessment", [0, 100, 124]);
-  y = drawTable(doc, y,
+  y = drawTable(ctx, y,
     ["Domain", "Patient Assessment Findings"],
     [
       ["Dietary Pattern", data.dietaryPattern],
@@ -208,17 +253,17 @@ export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffe
   );
 
   y = drawSection(doc, y, "3. Previous Investigations", [0, 100, 124]);
-  if (y > 240) { doc.addPage(); y = 40; drawHeader(doc); }
   doc.setFontSize(9);
   doc.setTextColor(50, 50, 50);
   doc.setFont("helvetica", "normal");
   const invLines = doc.splitTextToSize(data.previousInvestigations || "None reported", 170);
+  y = ensureSpace(ctx, y, invLines.length * 4);
   doc.text(invLines, 20, y);
   y += invLines.length * 4 + 8;
 
   y = drawSection(doc, y, "4. Clinical Metrics & Vitals", [0, 100, 124]);
   const targets = options?.metricTargets;
-  y = drawTable(doc, y,
+  y = drawTable(ctx, y,
     ["Metric", "Recorded Value", "Target Range"],
     [
       ["Blood Pressure", data.bloodPressure, rangeString("bloodPressure", targets)],
@@ -231,8 +276,8 @@ export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffe
   );
 
   y = drawSection(doc, y, "5. Clinical Summary & Observations", [0, 100, 124]);
-  if (y > 240) { doc.addPage(); y = 40; drawHeader(doc); }
   doc.setFillColor(240, 249, 251);
+  y = ensureSpace(ctx, y, 30);
   doc.roundedRect(20, y, 170, 24, 3, 3, "F");
   doc.setFontSize(9);
   doc.setTextColor(50, 50, 50);
@@ -242,7 +287,7 @@ export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffe
   y += 30;
 
   y = drawSection(doc, y, "6. Personalized Management & Action Plan", [0, 100, 124]);
-  y = drawTable(doc, y,
+  y = drawTable(ctx, y,
     ["Intervention Area", "Prescribed Action Plan"],
     [
       ["Continuous Monitoring", data.continuousMonitoring],
@@ -251,9 +296,6 @@ export function generateReportPdf(data: ReportData, options?: PdfOptions): Buffe
       ["Follow-up Schedule", data.followUpSchedule],
     ]
   );
-
-  drawFooter(doc, pageNum);
-  if (y > 270) { doc.addPage(); drawHeader(doc); pageNum++; drawFooter(doc, pageNum); }
 
   return Buffer.from(doc.output("arraybuffer"));
 }

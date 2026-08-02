@@ -20,6 +20,16 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  const [existing] = await db
+    .select({ id: consultations.id })
+    .from(consultations)
+    .where(eq(consultations.id, id))
+    .limit(1);
+
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   await db
     .update(consultations)
     .set({ status })
