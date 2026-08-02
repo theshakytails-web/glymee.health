@@ -9,6 +9,7 @@ const navItems = [
   { label: "Inquiries", href: "/g9x2k7m3q8w-admin/consultations", icon: "mail" },
   { label: "Patients", href: "/g9x2k7m3q8w-admin/patients", icon: "people" },
   { label: "Reports", href: "/g9x2k7m3q8w-admin/reports", icon: "assignment" },
+  { label: "Inventory", href: "/g9x2k7m3q8w-admin/inventory", icon: "inventory_2" },
   { label: "Calendar", href: "/g9x2k7m3q8w-admin/calendar", icon: "calendar_month" },
   { label: "Settings", href: "/g9x2k7m3q8w-admin/settings", icon: "settings" },
 ];
