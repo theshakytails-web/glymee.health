@@ -101,6 +101,27 @@ export const appointments = sqliteTable("appointments", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const inventoryItems = sqliteTable("inventory_items", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull().default("general"),
+  quantity: real("quantity").notNull().default(0),
+  unit: text("unit").notNull().default("pcs"),
+  minQuantity: real("min_quantity").notNull().default(0),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const inventoryUsage = sqliteTable("inventory_usage", {
+  id: text("id").primaryKey(),
+  itemId: text("item_id").notNull(),
+  quantityUsed: real("quantity_used").notNull(),
+  notes: text("notes"),
+  usedAt: integer("used_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
