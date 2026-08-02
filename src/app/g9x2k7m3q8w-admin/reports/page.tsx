@@ -41,6 +41,12 @@ interface SavedReport {
   reportDataJson: string;
 }
 
+function pdfHref(value: string | null): string | null {
+  if (!value) return null;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return `/api/admin/reports/pdf?path=${encodeURIComponent(value)}`;
+}
+
 interface ClinicalMetrics {
   bloodPressureSystolic: number | "";
   bloodPressureDiastolic: number | "";
@@ -399,7 +405,11 @@ export default function ClinicalReportPage() {
       });
       if (!res.ok) throw new Error("Failed to generate PDF");
       const data = await res.json();
-      if (data.pdfUrl) { window.open(data.pdfUrl, "_blank"); loadSavedReports(selectedPatient); }
+      if (data.pdfUrl) {
+        const href = pdfHref(data.pdfUrl);
+        if (href) window.open(href, "_blank");
+        loadSavedReports(selectedPatient);
+      }
       else { alert("PDF generation succeeded but no URL returned."); }
     } catch (err) { console.error(err); alert("Failed to generate PDF."); }
     finally { setGeneratingPdf(false); }
@@ -1014,7 +1024,7 @@ export default function ClinicalReportPage() {
                           <td className="py-3 px-4 text-right">
                             <button onClick={() => loadReportIntoView(r)} className="text-primary hover:text-primary/80 text-xs font-medium px-3 py-1 rounded hover:bg-primary/5 transition-colors">View</button>
                             <button onClick={() => handleDownloadPdf(r.id)} disabled={generatingPdf} className="text-secondary hover:text-secondary/80 text-xs font-medium px-3 py-1 rounded hover:bg-secondary/5 transition-colors ml-1 disabled:opacity-50">{generatingPdf ? "..." : "Download"}</button>
-                            {r.pdfUrl && <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-tertiary hover:text-tertiary/80 text-xs font-medium px-3 py-1 rounded hover:bg-tertiary/5 transition-colors ml-1">Open PDF</a>}
+                            {r.pdfUrl && <a href={pdfHref(r.pdfUrl) || "#"} target="_blank" rel="noopener noreferrer" className="text-tertiary hover:text-tertiary/80 text-xs font-medium px-3 py-1 rounded hover:bg-tertiary/5 transition-colors ml-1">Open PDF</a>}
                           </td>
                         </tr>
                       ))}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { patients } from "@/db/schema";
-import { sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -14,15 +14,14 @@ export async function POST(request: Request) {
 
   const { patientIds } = await request.json();
 
-  let data;
-  if (patientIds && patientIds.length > 0) {
-    data = await db
-      .select()
-      .from(patients)
-      .where(sql`${patients.id} IN ${patientIds}`);
-  } else {
-    data = await db.select().from(patients);
-  }
+  const ids =
+    Array.isArray(patientIds) && patientIds.length > 0
+      ? patientIds.filter((id: unknown) => typeof id === "string").slice(0, 5000)
+      : null;
+
+  const data = ids && ids.length > 0
+    ? await db.select().from(patients).where(inArray(patients.id, ids))
+    : await db.select().from(patients).limit(5000);
 
   const doc = new jsPDF("l", "mm", "a4");
 

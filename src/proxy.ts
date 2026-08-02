@@ -4,6 +4,11 @@ import type { NextRequest } from "next/server";
 const ADMIN_PATH = "/g9x2k7m3q8w-admin";
 const API_PATH = "/api";
 
+const ALLOWED_ORIGINS = new Set([
+  "https://glymee.com",
+  "https://www.glymee.com",
+]);
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
@@ -27,29 +32,23 @@ export function proxy(request: NextRequest) {
   // API routes: CORS + additional protection
   if (pathname.startsWith(API_PATH)) {
     const origin = request.headers.get("origin") || "";
-    const allowedOrigins = [
-      "https://glymee.com",
-      "https://www.glymee.com",
-      "http://localhost:3000",
-      "http://localhost:8787",
-    ];
+    const isAllowed = !origin || ALLOWED_ORIGINS.has(origin);
 
-    if (allowedOrigins.includes(origin) || !origin) {
-      response.headers.set("Access-Control-Allow-Origin", origin || "*");
+    if (isAllowed) {
+      if (origin) {
+        response.headers.set("Access-Control-Allow-Origin", origin);
+      }
       response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
       response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
       response.headers.set("Access-Control-Allow-Credentials", "true");
     }
 
-    // Block non-admin API access from external referrers
-    const referer = request.headers.get("referer") || "";
-    if (!pathname.startsWith(ADMIN_PATH) && referer && !referer.includes("glymee.com") && !referer.includes("localhost")) {
-      // Allow if it has a valid origin check above
-    }
-
     // Handle OPTIONS preflight
     if (request.method === "OPTIONS") {
-      return new NextResponse(null, { status: 200, headers: response.headers });
+      return new NextResponse(null, {
+        status: isAllowed ? 200 : 403,
+        headers: response.headers,
+      });
     }
   }
 

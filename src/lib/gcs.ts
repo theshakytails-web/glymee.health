@@ -28,10 +28,23 @@ export async function uploadPdf(
       contentType: "application/pdf",
       resumable: false,
     });
-    await file.makePublic();
-    return `https://storage.googleapis.com/${bucketName}/${fileName}`;
+    return fileName;
   } catch (err) {
     console.error("GCS upload error:", err);
+    return null;
+  }
+}
+
+export async function downloadPdf(fileName: string): Promise<Buffer | null> {
+  const storage = getStorageClient();
+  if (!storage) return null;
+
+  try {
+    const bucket = storage.bucket(bucketName);
+    const [buffer] = await bucket.file(fileName).download();
+    return buffer;
+  } catch (err) {
+    console.error("GCS download error:", err);
     return null;
   }
 }
