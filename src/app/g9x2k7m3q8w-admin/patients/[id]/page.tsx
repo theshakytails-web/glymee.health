@@ -185,12 +185,22 @@ export default function PatientDetailPage({
               </h1>
             </div>
             {!editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Edit
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    router.push(`/g9x2k7m3q8w-admin/invoices/new?patientId=${id}`)
+                  }
+                  className="px-4 py-2 text-sm bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors"
+                >
+                  Create Invoice
+                </button>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Edit
+                </button>
+              </div>
             )}
           </div>
 

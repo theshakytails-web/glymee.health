@@ -14,6 +14,17 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   hba1c_max: "7.0",
   glucoseFasting_max: "126",
   glucosePostPrandial_max: "180",
+  invoice_business_name: "RK Enterprises",
+  invoice_gstin: "27CVDPP6588E1Z3",
+  invoice_phone: "+91 8452823804",
+  invoice_email: "help@glymee.com",
+  invoice_website: "www.glymee.com",
+  invoice_address: "Pune, Maharashtra, India",
+  invoice_upi_id: "",
+  invoice_bank_name: "",
+  invoice_bank_account: "",
+  invoice_bank_ifsc: "",
+  invoice_payment_terms: "Payment is due within 7 days of the invoice date.",
 };
 
 async function getSettingsMap(): Promise<Record<string, string>> {
