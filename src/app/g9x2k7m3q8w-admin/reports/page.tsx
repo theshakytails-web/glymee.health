@@ -285,25 +285,43 @@ export default function ClinicalReportPage() {
 
   useEffect(() => { loadPatients(); }, [router]);
 
-  function loadSavedReports(pid: string) {
+  function loadSavedReports(pid: string): Promise<SavedReport[]> {
     setLoadingReports(true);
-    fetch("/api/admin/reports?patientId=" + encodeURIComponent(pid))
+    return fetch("/api/admin/reports?patientId=" + encodeURIComponent(pid))
       .then((r) => r.json())
-      .then((data) => setSavedReports(data.reports || []))
-      .catch(() => setSavedReports([]))
+      .then((data) => {
+        const reports = data.reports || [];
+        setSavedReports(reports);
+        return reports;
+      })
+      .catch(() => {
+        setSavedReports([]);
+        return [];
+      })
       .finally(() => setLoadingReports(false));
   }
 
   useEffect(() => {
-    if (!selectedPatient) { setPatient(null); setSavedReports([]); return; }
-    fetch("/api/admin/patients/" + selectedPatient)
-      .then((r) => r.json())
-      .then((data) => {
-        setPatient(data.patient);
-        setChiefComplaint(data.patient.chiefComplaint || data.patient.mainConcern || "");
-      })
-      .catch(() => setPatient(null));
-    loadSavedReports(selectedPatient);
+    if (!selectedPatient) {
+      setPatient(null);
+      setSavedReports([]);
+      return;
+    }
+    resetForm();
+    Promise.all([
+      fetch("/api/admin/patients/" + selectedPatient)
+        .then((r) => r.json())
+        .catch(() => ({ patient: null })),
+      loadSavedReports(selectedPatient),
+    ]).then(([patientRes, reports]) => {
+      const p = patientRes.patient;
+      setPatient(p);
+      if (reports.length > 0) {
+        applyReportToForm(reports[0]);
+      } else if (p) {
+        setChiefComplaint(p.chiefComplaint || p.mainConcern || "");
+      }
+    });
   }, [selectedPatient]);
 
   function handleMetricChange(key: keyof ClinicalMetrics, value: string) {
@@ -415,9 +433,8 @@ export default function ClinicalReportPage() {
     finally { setGeneratingPdf(false); }
   }
 
-  function loadReportIntoView(report: SavedReport) {
+  function applyReportToForm(report: SavedReport) {
     try {
-      const data = JSON.parse(report.reportDataJson || "{}");
       const m = JSON.parse(report.metricsJson || "{}");
       const l = JSON.parse(report.lifestyleJson || "{}");
       const a = JSON.parse(report.actionPlanJson || "{}");
@@ -435,9 +452,29 @@ export default function ClinicalReportPage() {
       if (ayu.dashvida != null) setAyurvedic(ayu);
       setClinicalSummary(report.clinicalSummary || "");
       setPreviousInvestigations(report.previousInvestigations || "");
-      setGenerated(true);
-      setActiveTab("report");
-    } catch { alert("Could not load report data."); }
+    } catch { /* ignore malformed report data */ }
+  }
+
+  function resetForm() {
+    setClinicianName("");
+    setChiefComplaint("");
+    setMetrics({ ...EMPTY_METRICS });
+    setLifestyle({ ...EMPTY_LIFESTYLE });
+    setActionPlan({ ...EMPTY_ACTION_PLAN });
+    setClinicalHistory({ ...EMPTY_CLINICAL_HISTORY });
+    setReviewOfSystems({ ...EMPTY_ROS });
+    setAyurvedic(JSON.parse(JSON.stringify(EMPTY_AYURVEDIC)));
+    setClinicalSummary("");
+    setPreviousInvestigations("");
+    setGenerated(false);
+    setLastReportId(null);
+    setActiveTab("input");
+  }
+
+  function loadReportIntoView(report: SavedReport) {
+    applyReportToForm(report);
+    setGenerated(true);
+    setActiveTab("report");
   }
 
   function formatDate(ts: string) {
