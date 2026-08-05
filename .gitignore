@@ -45,3 +45,5 @@ next-env.d.ts
 wrangler.toml
 .wrangler
 .dev.vars
+# Invoice PDFs downloaded into project root
+/INV-*.pdf
