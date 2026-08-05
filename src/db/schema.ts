@@ -89,6 +89,31 @@ export const payments = sqliteTable("payments", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const invoices = sqliteTable("invoices", {
+  id: text("id").primaryKey(),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  patientId: text("patient_id").notNull(),
+  itemsJson: text("items_json").notNull(),
+  subtotal: real("subtotal").notNull().default(0),
+  discount: real("discount").notNull().default(0),
+  taxableAmount: real("taxable_amount").notNull().default(0),
+  gstMode: text("gst_mode", {
+    enum: ["cgst_sgst", "igst", "none"],
+  })
+    .notNull()
+    .default("cgst_sgst"),
+  cgst: real("cgst").notNull().default(0),
+  sgst: real("sgst").notNull().default(0),
+  igst: real("igst").notNull().default(0),
+  grandTotal: real("grand_total").notNull().default(0),
+  amountPaid: real("amount_paid").notNull().default(0),
+  balanceDue: real("balance_due").notNull().default(0),
+  paymentMethod: text("payment_method").notNull().default("UPI"),
+  paymentNote: text("payment_note"),
+  invoiceDate: text("invoice_date").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const appointments = sqliteTable("appointments", {
   id: text("id").primaryKey(),
   patientId: text("patient_id").notNull(),
