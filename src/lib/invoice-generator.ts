@@ -78,6 +78,12 @@ function sectionTitle(doc: jsPDF, text: string, x: number, y: number) {
   doc.text(text.toUpperCase(), x, y);
 }
 
+function wrapLines(doc: jsPDF, text: string, width: number, max: number): string[] {
+  if (!text) return [];
+  const lines = doc.splitTextToSize(text, width) as string[];
+  return lines.slice(0, max).map(String);
+}
+
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const contentW = PAGE_W - 2 * MARGIN;
@@ -129,18 +135,17 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     align: "right",
   });
 
-  // ---- Bill To (height computed to fit content) ----
+  // ---- Bill To (adaptive: every field wrapped, box sized to fit) ----
   y = 70;
-  const patientLines: string[] = [];
-  if (data.patientPhone) patientLines.push(`Mobile: ${data.patientPhone}`);
-  if (data.patientEmail) patientLines.push(`Email: ${data.patientEmail}`);
-  const addrLines = data.patientAddress
-    ? (doc.splitTextToSize(data.patientAddress, contentW - 10) as string[])
-    : [];
-  const addrCount = Math.min(addrLines.length, 3);
-  const contactCount = patientLines.length;
-  const totalLines = contactCount + addrCount;
-  const billBoxH = Math.max(24, 24 + (totalLines - 1) * 5);
+  const billTextW = contentW - 10;
+  const nameLines = wrapLines(doc, data.patientName, billTextW, 2);
+  const mobileLines = wrapLines(doc, data.patientPhone ? `Mobile: ${data.patientPhone}` : "", billTextW, 2);
+  const emailLines = wrapLines(doc, data.patientEmail ? `Email: ${data.patientEmail}` : "", billTextW, 2);
+  const addrLines = wrapLines(doc, data.patientAddress || "", billTextW, 3);
+  const restLines = mobileLines.length + emailLines.length + addrLines.length;
+  const nameH = nameLines.length * 5;
+  const restH = restLines * 4.5;
+  const billBoxH = Math.max(24, 15 + nameH + restH + 4);
 
   doc.setFillColor(...LIGHT);
   doc.roundedRect(MARGIN, y, contentW, billBoxH, 2, 2, "F");
@@ -148,18 +153,17 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...INK);
-  doc.text(data.patientName, MARGIN + 5, y + 15);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  let by = y + 21;
-  for (const line of patientLines) {
+  let by = y + 15;
+  for (const line of nameLines) {
     doc.text(line, MARGIN + 5, by);
     by += 5;
   }
-  for (let i = 0; i < addrCount; i++) {
-    doc.text(addrLines[i] as string, MARGIN + 5, by);
-    by += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  for (const line of [...mobileLines, ...emailLines, ...addrLines]) {
+    doc.text(line, MARGIN + 5, by);
+    by += 4.5;
   }
 
   y = y + billBoxH + 8;
