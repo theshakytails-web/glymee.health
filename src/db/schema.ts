@@ -114,6 +114,35 @@ export const invoices = sqliteTable("invoices", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const deleteInvoices = sqliteTable("delete_invoices", {
+  id: text("id").primaryKey(),
+  originalInvoiceId: text("original_invoice_id"),
+  invoiceNumber: text("invoice_number"),
+  patientId: text("patient_id"),
+  patientName: text("patient_name"),
+  patientPhone: text("patient_phone"),
+  itemsJson: text("items_json").notNull(),
+  subtotal: real("subtotal").notNull().default(0),
+  discount: real("discount").notNull().default(0),
+  taxableAmount: real("taxable_amount").notNull().default(0),
+  gstMode: text("gst_mode", {
+    enum: ["cgst_sgst", "igst", "none"],
+  })
+    .notNull()
+    .default("cgst_sgst"),
+  cgst: real("cgst").notNull().default(0),
+  sgst: real("sgst").notNull().default(0),
+  igst: real("igst").notNull().default(0),
+  grandTotal: real("grand_total").notNull().default(0),
+  amountPaid: real("amount_paid").notNull().default(0),
+  balanceDue: real("balance_due").notNull().default(0),
+  paymentMethod: text("payment_method").notNull().default("UPI"),
+  paymentNote: text("payment_note"),
+  invoiceDate: text("invoice_date"),
+  deletedBy: text("deleted_by"),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }).notNull(),
+});
+
 export const appointments = sqliteTable("appointments", {
   id: text("id").primaryKey(),
   patientId: text("patient_id").notNull(),

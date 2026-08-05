@@ -44,6 +44,7 @@ export default function InvoicesPage({
   const [query, setQuery] = useState<{ patientId?: string } | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     searchParams.then((sp) => setQuery(sp));
@@ -68,6 +69,30 @@ export default function InvoicesPage({
   useEffect(() => {
     load();
   }, [load]);
+
+  async function handleDelete(id: string, invoiceNumber: string) {
+    if (
+      !window.confirm(
+        `Delete invoice ${invoiceNumber}? This will be recorded in the invoice history.`
+      )
+    ) {
+      return;
+    }
+    setDeleting(id);
+    try {
+      const res = await fetch(`/api/admin/invoices/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete invoice");
+        return;
+      }
+      setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+    } catch {
+      alert("Network error while deleting invoice.");
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   if (!query || loading) {
     return (
@@ -99,19 +124,29 @@ export default function InvoicesPage({
                 </p>
               )}
             </div>
-            <button
-              onClick={() =>
-                router.push(
-                  "/g9x2k7m3q8w-admin/invoices/new" +
-                    (query.patientId
-                      ? `?patientId=${encodeURIComponent(query.patientId)}`
-                      : "")
-                )
-              }
-              className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors font-medium"
-            >
-              + Create Invoice
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() =>
+                  router.push("/g9x2k7m3q8w-admin/invoices/history")
+                }
+                className="px-4 py-2 text-sm border border-outline-variant/20 text-on-surface-variant rounded-lg hover:bg-surface-container-low transition-colors font-medium"
+              >
+                History
+              </button>
+              <button
+                onClick={() =>
+                  router.push(
+                    "/g9x2k7m3q8w-admin/invoices/new" +
+                      (query.patientId
+                        ? `?patientId=${encodeURIComponent(query.patientId)}`
+                        : "")
+                  )
+                }
+                className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              >
+                + Create Invoice
+              </button>
+            </div>
           </div>
 
           <div className="bg-surface rounded-xl border border-outline-variant/10 overflow-hidden">
@@ -190,17 +225,29 @@ export default function InvoicesPage({
                             </span>
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <button
-                              onClick={() =>
-                                downloadPdf(inv.id, inv.invoiceNumber)
-                              }
-                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline px-2 py-1"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">
-                                download
-                              </span>
-                              PDF
-                            </button>
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                onClick={() =>
+                                  downloadPdf(inv.id, inv.invoiceNumber)
+                                }
+                                className="inline-flex items-center gap-1 text-sm text-primary hover:underline px-2 py-1"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">
+                                  download
+                                </span>
+                                PDF
+                              </button>
+                              <button
+                                onClick={() => handleDelete(inv.id, inv.invoiceNumber)}
+                                disabled={deleting === inv.id}
+                                className="inline-flex items-center gap-1 text-sm text-error hover:underline px-2 py-1 disabled:opacity-40"
+                                title="Delete invoice"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">
+                                  {deleting === inv.id ? "hourglass_top" : "delete"}
+                                </span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

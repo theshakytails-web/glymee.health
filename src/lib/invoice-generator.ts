@@ -46,7 +46,6 @@ export interface InvoiceData {
 }
 
 const TEAL: [number, number, number] = [0, 100, 124];
-const ACCENT: [number, number, number] = [141, 212, 230];
 const LIGHT: [number, number, number] = [240, 249, 251];
 const MUTED: [number, number, number] = [110, 110, 110];
 const INK: [number, number, number] = [40, 40, 40];
@@ -79,44 +78,41 @@ function sectionTitle(doc: jsPDF, text: string, x: number, y: number) {
   doc.text(text.toUpperCase(), x, y);
 }
 
-function bodyText(doc: jsPDF, text: string, x: number, y: number) {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...INK);
-  doc.text(text, x, y);
-}
-
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const contentW = PAGE_W - 2 * MARGIN;
 
-  // ---- Header band ----
-  doc.setFillColor(...TEAL);
-  doc.rect(0, 0, PAGE_W, 42, "F");
-  doc.setFillColor(...ACCENT);
-  doc.rect(0, 42, PAGE_W, 1.4, "F");
-
+  // ---- Header (white, plain, minimal) ----
   try {
-    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN, 13, 46, 12.4);
+    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN, 11, 44, 11.9);
   } catch {
     /* name image optional */
   }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text(data.businessName, PAGE_W - MARGIN, 14, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text("Manage Today · Healthy Tomorrow", MARGIN, 28.5);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...INK);
+  doc.text(data.businessName, PAGE_W - MARGIN, 15, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
   doc.text(`GSTIN: ${data.gstin}`, PAGE_W - MARGIN, 21, { align: "right" });
-  doc.text(`Phone: ${data.phone}`, PAGE_W - MARGIN, 27, { align: "right" });
-  doc.text(`Email: ${data.email}`, PAGE_W - MARGIN, 33, { align: "right" });
-  doc.text(`Website: ${data.website}`, PAGE_W - MARGIN, 39, {
+  doc.text(`Phone: ${data.phone}`, PAGE_W - MARGIN, 26.5, { align: "right" });
+  doc.text(`Email: ${data.email}`, PAGE_W - MARGIN, 32, { align: "right" });
+  doc.text(`Website: ${data.website}`, PAGE_W - MARGIN, 37.5, {
     align: "right",
   });
 
+  doc.setDrawColor(210, 210, 210);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN, 48, PAGE_W - MARGIN, 48);
+
   // ---- Title row ----
-  let y = 56;
+  let y = 60;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
   doc.setTextColor(...TEAL);
@@ -133,10 +129,21 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     align: "right",
   });
 
-  // ---- Bill To ----
-  y = 66;
+  // ---- Bill To (height computed to fit content) ----
+  y = 70;
+  const patientLines: string[] = [];
+  if (data.patientPhone) patientLines.push(`Mobile: ${data.patientPhone}`);
+  if (data.patientEmail) patientLines.push(`Email: ${data.patientEmail}`);
+  const addrLines = data.patientAddress
+    ? (doc.splitTextToSize(data.patientAddress, contentW - 10) as string[])
+    : [];
+  const addrCount = Math.min(addrLines.length, 3);
+  const contactCount = patientLines.length;
+  const totalLines = contactCount + addrCount;
+  const billBoxH = Math.max(24, 24 + (totalLines - 1) * 5);
+
   doc.setFillColor(...LIGHT);
-  doc.roundedRect(MARGIN, y, contentW, 26, 2, 2, "F");
+  doc.roundedRect(MARGIN, y, contentW, billBoxH, 2, 2, "F");
   sectionTitle(doc, "Bill To", MARGIN + 5, y + 7);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
@@ -146,26 +153,16 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
   let by = y + 21;
-  if (data.patientPhone) {
-    doc.text(`Mobile: ${data.patientPhone}`, MARGIN + 5, by);
+  for (const line of patientLines) {
+    doc.text(line, MARGIN + 5, by);
     by += 5;
   }
-  if (data.patientEmail) {
-    doc.text(`Email: ${data.patientEmail}`, MARGIN + 5, by);
-    by += 5;
-  }
-  const addrLines = data.patientAddress
-    ? (doc.splitTextToSize(data.patientAddress, contentW - 10) as string[])
-    : [];
-  for (const line of addrLines.slice(0, 1)) {
-    if (by <= y + 24) {
-      doc.text(line as string, MARGIN + 5, by);
-    }
+  for (let i = 0; i < addrCount; i++) {
+    doc.text(addrLines[i] as string, MARGIN + 5, by);
     by += 5;
   }
 
-  // ---- Services table ----
-  y = 100;
+  y = y + billBoxH + 8;
   autoTable(doc, {
     startY: y,
     margin: { left: MARGIN, right: MARGIN },
