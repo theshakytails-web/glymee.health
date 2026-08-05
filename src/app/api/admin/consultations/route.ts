@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { consultations } from "@/db/schema";
-import { eq, desc, like, or, sql } from "drizzle-orm";
+import { and, eq, desc, like, or, sql } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const admin = await getCurrentAdmin();
@@ -13,8 +13,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || "";
   const status = searchParams.get("status") || "";
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(searchParams.get("limit") || "20") || 20)
+  );
   const offset = (page - 1) * limit;
 
   const conditions = [];
@@ -32,7 +35,8 @@ export async function GET(request: Request) {
     conditions.push(eq(consultations.status, status as "new" | "contacted" | "converted" | "closed"));
   }
 
-  const whereClause = conditions.length > 0 ? sql`${conditions[0]}` : undefined;
+  const whereClause =
+    conditions.length > 0 ? and(...(conditions as any[])) : undefined;
 
   const allConsultations = await db
     .select()

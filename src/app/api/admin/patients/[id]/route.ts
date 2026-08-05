@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { db } from "@/db";
-import { patients } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { patients, payments, appointments, clinicalReports } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
 
 export async function GET(
   _request: Request,
@@ -49,11 +49,31 @@ export async function PUT(
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });
   }
 
+  const age = data.age === undefined || data.age === null || data.age === ""
+    ? NaN
+    : parseInt(data.age);
+  if (Number.isNaN(age) || !Number.isInteger(age) || age < 1 || age > 150) {
+    return NextResponse.json(
+      { error: "Age must be a whole number between 1 and 150" },
+      { status: 400 }
+    );
+  }
+
+  const fee = data.fee === undefined || data.fee === null || data.fee === ""
+    ? 0
+    : parseFloat(data.fee);
+  if (Number.isNaN(fee) || fee < 0) {
+    return NextResponse.json(
+      { error: "Fee must be a non-negative number" },
+      { status: 400 }
+    );
+  }
+
   await db
     .update(patients)
     .set({
       fullName: data.fullName,
-      age: parseInt(data.age),
+      age,
       gender: data.gender,
       email: data.email,
       phone: data.phone,
@@ -72,7 +92,7 @@ export async function PUT(
       mainConcern: data.mainConcern || null,
       referralSource: data.referralSource || null,
       additionalNotes: data.additionalNotes || null,
-      fee: parseFloat(data.fee) || 0,
+      fee,
       nextFollowUp: data.nextFollowUp || null,
       status: data.status,
       updatedAt: new Date(),
@@ -92,6 +112,27 @@ export async function DELETE(
   }
 
   const { id } = await params;
+
+  const [existing] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(eq(patients.id, id))
+    .limit(1);
+
+  if (!existing) {
+    return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+  }
+
+  const patientIds = [id];
+  await db
+    .delete(payments)
+    .where(inArray(payments.patientId, patientIds));
+  await db
+    .delete(appointments)
+    .where(inArray(appointments.patientId, patientIds));
+  await db
+    .delete(clinicalReports)
+    .where(inArray(clinicalReports.patientId, patientIds));
   await db.delete(patients).where(eq(patients.id, id));
 
   return NextResponse.json({ success: true });

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/g9x2k7m3q8w-admin/dashboard", icon: "dashboard" },
@@ -17,7 +17,20 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/auth/me", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) {
+          router.replace("/g9x2k7m3q8w-admin");
+        }
+      })
+      .catch(() => {
+        router.replace("/g9x2k7m3q8w-admin");
+      });
+  }, [router]);
 
   async function handleLogout() {
     await fetch("/api/admin/auth/logout", { method: "POST" });

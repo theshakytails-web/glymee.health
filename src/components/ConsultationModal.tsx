@@ -57,7 +57,7 @@ export default function ConsultationModal() {
   const { isOpen, close } = useConsultation();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error" | "rateLimited">("idle");
 
   if (!isOpen) return null;
 
@@ -75,15 +75,20 @@ export default function ConsultationModal() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const response = await fetch(`${apiUrl}/v1/sendemail`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        apiUrl ? `${apiUrl}/v1/sendemail` : "/api/v1/sendemail",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (response.ok) {
         setSubmitStatus("success");
         setFormData(initialFormData);
+      } else if (response.status === 429) {
+        setSubmitStatus("rateLimited");
       } else {
         setSubmitStatus("error");
       }
@@ -383,6 +388,13 @@ export default function ConsultationModal() {
             <div className="flex items-center gap-3 p-4 bg-glucose-optimal/10 border border-glucose-optimal/30 rounded-lg text-glucose-optimal">
               <span className="material-symbols-outlined">check_circle</span>
               <p className="font-label-md">Thank you! We&apos;ll contact you within 24 hours.</p>
+            </div>
+          )}
+
+          {submitStatus === "rateLimited" && (
+            <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-300 rounded-lg text-amber-800">
+              <span className="material-symbols-outlined">hourglass_top</span>
+              <p className="font-label-md">Too many requests. Please try again in a little while.</p>
             </div>
           )}
 

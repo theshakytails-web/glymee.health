@@ -53,7 +53,7 @@ const EMAIL_WRAPPER = (content: string) => `
 </body>
 </html>`;
 
-interface FormData {
+export interface ConsultationFormData {
   fullName: string;
   age: string;
   gender: string;
@@ -69,7 +69,7 @@ interface FormData {
   additionalNotes: string;
 }
 
-export function getConfirmationEmail(data: FormData): string {
+export function getConfirmationEmail(data: ConsultationFormData): string {
   return EMAIL_WRAPPER(`
     <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;">Thank You, ${esc(data.fullName)}!</h1>
     <p style="font-size:16px;color:#555;margin:0 0 24px 0;line-height:1.6;">
@@ -107,7 +107,7 @@ export function getConfirmationEmail(data: FormData): string {
   `);
 }
 
-export function getAdminNotificationEmail(data: FormData): string {
+export function getAdminNotificationEmail(data: ConsultationFormData): string {
   return EMAIL_WRAPPER(`
     <h1 style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;">New Consultation Request</h1>
     <p style="font-size:15px;color:#555;margin:0 0 24px 0;line-height:1.6;">

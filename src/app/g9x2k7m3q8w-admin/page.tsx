@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
@@ -11,6 +11,16 @@ export default function AdminLoginPage() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/auth/me", { cache: "no-store" })
+      .then((res) => {
+        if (res.ok) {
+          router.replace("/g9x2k7m3q8w-admin/dashboard");
+        }
+      })
+      .catch(() => {});
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

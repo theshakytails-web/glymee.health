@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import {
   verifyOTP,
-  createJWT,
-  setAuthCookie,
+  createSession,
   getAdminByEmail,
 } from "@/lib/admin-auth";
+import { checkRateLimit, consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const FIFTEEN_MINUTES = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
@@ -17,15 +19,31 @@ export async function POST(request: Request) {
       );
     }
 
-    const valid = await verifyOTP(email, code);
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const ip = getClientIp(request);
+    const emailKey = `otp-verify:email:${normalizedEmail}`;
+    const ipKey = `otp-verify:ip:${ip}`;
+
+    const emailLimit = await checkRateLimit(emailKey, 10, FIFTEEN_MINUTES);
+    const ipLimit = await checkRateLimit(ipKey, 20, FIFTEEN_MINUTES);
+    if (!emailLimit.ok || !ipLimit.ok) {
+      return NextResponse.json(
+        { error: "Too many attempts. Request a new code and try again later." },
+        { status: 429 }
+      );
+    }
+
+    const valid = await verifyOTP(normalizedEmail, String(code));
     if (!valid) {
+      await consumeRateLimit(emailKey, FIFTEEN_MINUTES);
+      await consumeRateLimit(ipKey, FIFTEEN_MINUTES);
       return NextResponse.json(
         { error: "Invalid or expired OTP code" },
         { status: 401 }
       );
     }
 
-    const admin = await getAdminByEmail(email);
+    const admin = await getAdminByEmail(normalizedEmail);
     if (!admin) {
       return NextResponse.json(
         { error: "Admin not found" },
@@ -33,12 +51,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const token = await createJWT({
+    await createSession({
       id: admin.id,
       email: admin.email,
       name: admin.name,
     });
-    await setAuthCookie(token);
 
     return NextResponse.json({
       success: true,
