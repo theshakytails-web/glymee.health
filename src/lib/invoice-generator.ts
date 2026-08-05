@@ -49,7 +49,11 @@ const TEAL: [number, number, number] = [0, 100, 124];
 const ACCENT: [number, number, number] = [141, 212, 230];
 const LIGHT: [number, number, number] = [240, 249, 251];
 const MUTED: [number, number, number] = [110, 110, 110];
-const INK: [number, number, number] = [30, 30, 30];
+const INK: [number, number, number] = [40, 40, 40];
+
+const MARGIN = 14;
+const PAGE_W = 210;
+const PAGE_H = 297;
 
 function fmt(n: number): string {
   const [i, d] = round2(n || 0).toFixed(2).split(".");
@@ -68,102 +72,103 @@ function upiUri(upiId: string, payeeName: string, amount: number): string {
   )}&am=${amount.toFixed(2)}&cu=INR`;
 }
 
+function sectionTitle(doc: jsPDF, text: string, x: number, y: number) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...TEAL);
+  doc.text(text.toUpperCase(), x, y);
+}
+
+function bodyText(doc: jsPDF, text: string, x: number, y: number) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...INK);
+  doc.text(text, x, y);
+}
+
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const pageW = doc.internal.pageSize.getWidth();
-  const pageH = doc.internal.pageSize.getHeight();
-  const margin = 14;
-  const contentW = pageW - 2 * margin;
+  const contentW = PAGE_W - 2 * MARGIN;
 
-  // Header band
+  // ---- Header band ----
   doc.setFillColor(...TEAL);
-  doc.rect(0, 0, pageW, 44, "F");
+  doc.rect(0, 0, PAGE_W, 42, "F");
   doc.setFillColor(...ACCENT);
-  doc.rect(0, 44, pageW, 1.2, "F");
+  doc.rect(0, 42, PAGE_W, 1.4, "F");
 
   try {
-    doc.addImage(loadPngDataUrl("Glymee_logo_1.png"), "PNG", 14, 8, 18, 12);
+    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN, 13, 46, 12.4);
   } catch {
-    /* logo optional */
-  }
-  try {
-    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", 34, 9.5, 46, 12.4);
-  } catch {
-    /* logo optional */
+    /* name image optional */
   }
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
+  doc.setFontSize(10.5);
   doc.setTextColor(255, 255, 255);
-  doc.text(data.businessName, pageW - margin, 12, { align: "right" });
+  doc.text(data.businessName, PAGE_W - MARGIN, 14, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.text(`GSTIN: ${data.gstin}`, PAGE_W - MARGIN, 21, { align: "right" });
+  doc.text(`Phone: ${data.phone}`, PAGE_W - MARGIN, 27, { align: "right" });
+  doc.text(`Email: ${data.email}`, PAGE_W - MARGIN, 33, { align: "right" });
+  doc.text(`Website: ${data.website}`, PAGE_W - MARGIN, 39, {
+    align: "right",
+  });
+
+  // ---- Title row ----
+  let y = 56;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(17);
+  doc.setTextColor(...TEAL);
+  doc.text("TAX INVOICE", MARGIN, y);
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text(`Invoice No: ${data.invoiceNumber}`, PAGE_W - MARGIN, y, {
+    align: "right",
+  });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  doc.text(`GSTIN: ${data.gstin}`, pageW - margin, 20, { align: "right" });
-  doc.text(`Phone: ${data.phone}`, pageW - margin, 26, { align: "right" });
-  doc.text(`Email: ${data.email}`, pageW - margin, 31, { align: "right" });
-  doc.text(`Website: ${data.website}`, pageW - margin, 36, { align: "right" });
-
-  let y = 54;
-
-  // Title + meta
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(...TEAL);
-  doc.text("TAX INVOICE", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
   doc.setTextColor(...MUTED);
-  doc.text("Service / Goods Invoice", margin, y + 5);
-
-  doc.setFontSize(9.5);
-  doc.setTextColor(...INK);
-  doc.text(`Invoice No: ${data.invoiceNumber}`, pageW - margin, 54, {
-    align: "right",
-  });
-  doc.setTextColor(...MUTED);
-  doc.text(`Invoice Date: ${data.invoiceDate}`, pageW - margin, 60, {
+  doc.text(`Invoice Date: ${data.invoiceDate}`, PAGE_W - MARGIN, y + 5.5, {
     align: "right",
   });
 
-  y = 68;
-
-  // Bill To box
+  // ---- Bill To ----
+  y = 66;
   doc.setFillColor(...LIGHT);
-  doc.roundedRect(margin, y, contentW, 30, 2, 2, "F");
-  doc.setTextColor(...TEAL);
+  doc.roundedRect(MARGIN, y, contentW, 26, 2, 2, "F");
+  sectionTitle(doc, "Bill To", MARGIN + 5, y + 7);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("BILL TO", margin + 5, y + 7);
   doc.setFontSize(11);
   doc.setTextColor(...INK);
-  doc.text(data.patientName, margin + 5, y + 16);
+  doc.text(data.patientName, MARGIN + 5, y + 15);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  const billLines: string[] = [];
-  if (data.patientPhone) billLines.push(`Mobile: ${data.patientPhone}`);
-  if (data.patientEmail) billLines.push(`Email: ${data.patientEmail}`);
-  const addrLines = data.patientAddress
-    ? (doc.splitTextToSize(data.patientAddress, contentW - 130) as string[])
-    : [];
-  let by = y + 22;
-  for (const line of billLines) {
-    doc.text(line, margin + 5, by);
+  let by = y + 21;
+  if (data.patientPhone) {
+    doc.text(`Mobile: ${data.patientPhone}`, MARGIN + 5, by);
     by += 5;
   }
-  if (addrLines.length > 0) {
-    for (const line of addrLines.slice(0, 2)) {
-      doc.text(line, margin + 5, by);
-      by += 5;
+  if (data.patientEmail) {
+    doc.text(`Email: ${data.patientEmail}`, MARGIN + 5, by);
+    by += 5;
+  }
+  const addrLines = data.patientAddress
+    ? (doc.splitTextToSize(data.patientAddress, contentW - 10) as string[])
+    : [];
+  for (const line of addrLines.slice(0, 1)) {
+    if (by <= y + 24) {
+      doc.text(line as string, MARGIN + 5, by);
     }
+    by += 5;
   }
 
-  y += 36;
-
-  // Services table
+  // ---- Services table ----
+  y = 100;
   autoTable(doc, {
     startY: y,
-    margin: { left: margin, right: margin },
+    margin: { left: MARGIN, right: MARGIN },
     head: [["#", "Service Description", "Qty", "Rate (Rs.)", "Amount (Rs.)"]],
     body: data.items.map((it, i) => [
       String(i + 1),
@@ -173,39 +178,35 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
       fmt((it.qty || 0) * (it.rate || 0)),
     ]),
     columnStyles: {
-      0: { cellWidth: 12 },
-      2: { cellWidth: 18, halign: "center" },
+      0: { cellWidth: 10 },
+      2: { cellWidth: 16, halign: "center" },
       3: { cellWidth: 34, halign: "right" },
       4: { cellWidth: 36, halign: "right" },
     },
-    styles: { fontSize: 9, cellPadding: 3, textColor: [40, 40, 40] },
+    styles: { fontSize: 9, cellPadding: 3, textColor: INK },
     headStyles: { fillColor: TEAL, textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: LIGHT },
+    theme: "striped",
   });
 
   y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable
-    .finalY + 10;
+    .finalY + 8;
 
-  // Payment info (left) + summary (right)
+  // ---- Bottom boxes (payment info left, summary right) ----
+  const boxH = 76;
+  if (y + boxH > PAGE_H - 18) {
+    doc.addPage();
+    y = 20;
+  }
   const leftW = 96;
   const rightW = contentW - leftW - 6;
-  const boxH = 82;
+  const leftX = MARGIN;
+  const rightX = MARGIN + leftW + 6;
 
-  if (y + boxH > pageH - 18) {
-    doc.addPage();
-    y = 18;
-  }
-
-  // Payment summary (right box)
+  // Payment Summary (right)
   doc.setFillColor(...LIGHT);
-  doc.roundedRect(margin + leftW + 6, y, rightW, boxH, 2, 2, "F");
-  doc.setDrawColor(...TEAL);
-  doc.setLineWidth(0.4);
-  doc.rect(margin + leftW + 6, y, rightW, boxH);
-  doc.setTextColor(...TEAL);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("PAYMENT SUMMARY", margin + leftW + 6 + 5, y + 8);
+  doc.roundedRect(rightX, y, rightW, boxH, 2, 2, "F");
+  sectionTitle(doc, "Payment Summary", rightX + 5, y + 8);
 
   const summaryRows: { label: string; value: string; bold?: boolean }[] = [
     { label: "Subtotal", value: fmt(data.subtotal) },
@@ -226,112 +227,127 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     { label: "Balance Due", value: fmt(data.balanceDue), bold: true }
   );
 
-  let sy = y + 14;
-  doc.setFontSize(9);
+  let sy = y + 15;
+  doc.setFontSize(8.5);
   for (const row of summaryRows) {
-    doc.setFont("helvetica", row.bold ? "bold" : "normal");
-    if (row.bold) {
-      doc.setTextColor(...TEAL);
-    } else {
-      doc.setTextColor(70, 70, 70);
-    }
-    if (row.bold && row.label === "Grand Total") {
+    const isGrand = row.bold && row.label === "Grand Total";
+    if (isGrand) {
       doc.setFillColor(...TEAL);
-      doc.rect(margin + leftW + 6, sy - 5, rightW, 9, "F");
+      doc.rect(rightX, sy - 5, rightW, 8.5, "F");
       doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+    } else {
+      doc.setFont("helvetica", row.bold ? "bold" : "normal");
+      doc.setTextColor(...(row.bold ? INK : MUTED));
     }
-    doc.text(row.label, margin + leftW + 6 + 5, sy);
-    doc.text(row.value, margin + leftW + 6 + rightW - 5, sy, {
-      align: "right",
-    });
-    sy += 8;
+    doc.text(row.label, rightX + 5, sy);
+    doc.text(row.value, rightX + rightW - 5, sy, { align: "right" });
+    sy += 7.2;
   }
 
-  // Payment information (left box)
+  // Payment Information (left)
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(...TEAL);
-  doc.roundedRect(margin, y, leftW, boxH, 2, 2, "FD");
-  doc.setTextColor(...TEAL);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("PAYMENT INFORMATION", margin + 5, y + 8);
+  doc.roundedRect(leftX, y, leftW, boxH, 2, 2, "FD");
+  sectionTitle(doc, "Payment Information", leftX + 5, y + 8);
 
-  doc.setFontSize(8.5);
-  doc.setTextColor(70, 70, 70);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Payment Method: ${data.paymentMethod}`, margin + 5, y + 16);
+  let px = y + 16;
 
-  let qrY = y + 16;
   if (data.upiId) {
     const qrDataUrl = await QRCode.toDataURL(
       upiUri(data.upiId, data.businessName, data.grandTotal),
       { errorCorrectionLevel: "M", margin: 1, width: 400 }
     );
-    doc.addImage(qrDataUrl, "PNG", margin + 5, qrY + 4, 30, 30);
+    doc.addImage(qrDataUrl, "PNG", leftX + 5, px, 26, 26);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...INK);
+    doc.text("Scan to pay via UPI", leftX + 36, px + 7);
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
     doc.setTextColor(...MUTED);
     const upiLines = doc.splitTextToSize(
       `UPI ID: ${data.upiId}`,
-      leftW - 50
+      leftW - 46
     ) as string[];
-    doc.setFontSize(8);
-    upiLines.slice(0, 3).forEach((line, idx) => {
-      doc.text(line as string, margin + 40, qrY + 10 + idx * 4.5);
+    upiLines.slice(0, 3).forEach((line, i) => {
+      doc.text(line as string, leftX + 36, px + 13 + i * 4.5);
     });
-    qrY += 38;
+    doc.text(
+      `Amount: ${fmt(data.grandTotal)}`,
+      leftX + 36,
+      px + 13 + upiLines.slice(0, 3).length * 4.5 + 1
+    );
+    px += 30;
   }
-  doc.setFontSize(8.5);
+
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
   doc.setTextColor(...INK);
-  doc.text("Bank Details", margin + 5, qrY + 2);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...MUTED);
-  let px = qrY + 8;
+  doc.text(`Payment Method: ${data.paymentMethod}`, leftX + 5, px + 3);
+
   const bankLines: string[] = [];
   if (data.bankName) bankLines.push(`Bank: ${data.bankName}`);
   if (data.bankAccount) bankLines.push(`A/C No: ${data.bankAccount}`);
   if (data.bankIfsc) bankLines.push(`IFSC: ${data.bankIfsc}`);
-  if (bankLines.length === 0) bankLines.push("Payable at the clinic / as per arrangement.");
+  if (bankLines.length === 0) {
+    bankLines.push("Payable at the clinic / as per arrangement.");
+  }
+
+  let bky = px + 10;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...INK);
+  doc.text("Bank Details", leftX + 5, bky);
+  bky += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...MUTED);
   doc.setFontSize(8);
   for (const line of bankLines) {
     const wrapped = doc.splitTextToSize(line, leftW - 12) as string[];
-    wrapped.forEach((wl) => {
-      if (px <= y + boxH - 4) doc.text(wl as string, margin + 5, px);
-      px += 4.5;
-    });
+    for (const wl of wrapped) {
+      if (bky <= y + boxH - 5) doc.text(wl as string, leftX + 5, bky);
+      bky += 4.5;
+    }
   }
+
   if (data.paymentNote) {
-    px += 2;
+    bky += 2;
     const noteLines = doc.splitTextToSize(
       `Note: ${data.paymentNote}`,
       leftW - 12
     ) as string[];
     noteLines.slice(0, 2).forEach((wl) => {
-      if (px <= y + boxH - 4) doc.text(wl as string, margin + 5, px);
-      px += 4.5;
+      if (bky <= y + boxH - 5) doc.text(wl as string, leftX + 5, bky);
+      bky += 4.5;
     });
   }
 
-  // Footer on every page
+  // ---- Footer on every page ----
   const footer = (page: number) => {
     doc.setPage(page);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(...MUTED);
-    doc.text("Thank you for choosing Glymee.", pageW / 2, pageH - 16, {
+    doc.text("Thank you for choosing Glymee.", PAGE_W / 2, PAGE_H - 15, {
       align: "center",
     });
-    doc.text(data.paymentTerms, pageW / 2, pageH - 12, { align: "center" });
+    const terms = doc.splitTextToSize(data.paymentTerms, PAGE_W - 30) as string[];
+    terms.slice(0, 1).forEach((line) => {
+      doc.text(line as string, PAGE_W / 2, PAGE_H - 11, { align: "center" });
+    });
     doc.text(
       "This is a computer generated invoice and does not require any signature.",
-      pageW / 2,
-      pageH - 8,
+      PAGE_W / 2,
+      PAGE_H - 7,
       { align: "center" }
     );
     doc.setFontSize(7.5);
-    doc.text(`Page ${page} of ${doc.getNumberOfPages()}`, pageW - margin, pageH - 8, {
-      align: "right",
-    });
+    doc.text(
+      `Page ${page} of ${doc.getNumberOfPages()}`,
+      PAGE_W - MARGIN,
+      PAGE_H - 7,
+      { align: "right" }
+    );
   };
 
   const pages = doc.getNumberOfPages();
