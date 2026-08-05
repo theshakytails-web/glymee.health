@@ -46,7 +46,6 @@ export interface InvoiceData {
 }
 
 const TEAL: [number, number, number] = [0, 100, 124];
-const ACCENT: [number, number, number] = [141, 212, 230];
 const LIGHT: [number, number, number] = [240, 249, 251];
 const MUTED: [number, number, number] = [110, 110, 110];
 const INK: [number, number, number] = [40, 40, 40];
@@ -79,44 +78,47 @@ function sectionTitle(doc: jsPDF, text: string, x: number, y: number) {
   doc.text(text.toUpperCase(), x, y);
 }
 
-function bodyText(doc: jsPDF, text: string, x: number, y: number) {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...INK);
-  doc.text(text, x, y);
+function wrapLines(doc: jsPDF, text: string, width: number, max: number): string[] {
+  if (!text) return [];
+  const lines = doc.splitTextToSize(text, width) as string[];
+  return lines.slice(0, max).map(String);
 }
 
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const contentW = PAGE_W - 2 * MARGIN;
 
-  // ---- Header band ----
-  doc.setFillColor(...TEAL);
-  doc.rect(0, 0, PAGE_W, 42, "F");
-  doc.setFillColor(...ACCENT);
-  doc.rect(0, 42, PAGE_W, 1.4, "F");
-
+  // ---- Header (white, plain, minimal) ----
   try {
-    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN, 13, 46, 12.4);
+    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN, 11, 44, 11.9);
   } catch {
     /* name image optional */
   }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text(data.businessName, PAGE_W - MARGIN, 14, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text("Manage Today · Healthy Tomorrow", MARGIN, 28.5);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...INK);
+  doc.text(data.businessName, PAGE_W - MARGIN, 15, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
   doc.text(`GSTIN: ${data.gstin}`, PAGE_W - MARGIN, 21, { align: "right" });
-  doc.text(`Phone: ${data.phone}`, PAGE_W - MARGIN, 27, { align: "right" });
-  doc.text(`Email: ${data.email}`, PAGE_W - MARGIN, 33, { align: "right" });
-  doc.text(`Website: ${data.website}`, PAGE_W - MARGIN, 39, {
+  doc.text(`Phone: ${data.phone}`, PAGE_W - MARGIN, 26.5, { align: "right" });
+  doc.text(`Email: ${data.email}`, PAGE_W - MARGIN, 32, { align: "right" });
+  doc.text(`Website: ${data.website}`, PAGE_W - MARGIN, 37.5, {
     align: "right",
   });
 
+  doc.setDrawColor(210, 210, 210);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN, 48, PAGE_W - MARGIN, 48);
+
   // ---- Title row ----
-  let y = 56;
+  let y = 60;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
   doc.setTextColor(...TEAL);
@@ -133,39 +135,38 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     align: "right",
   });
 
-  // ---- Bill To ----
-  y = 66;
+  // ---- Bill To (adaptive: every field wrapped, box sized to fit) ----
+  y = 70;
+  const billTextW = contentW - 10;
+  const nameLines = wrapLines(doc, data.patientName, billTextW, 2);
+  const mobileLines = wrapLines(doc, data.patientPhone ? `Mobile: ${data.patientPhone}` : "", billTextW, 2);
+  const emailLines = wrapLines(doc, data.patientEmail ? `Email: ${data.patientEmail}` : "", billTextW, 2);
+  const addrLines = wrapLines(doc, data.patientAddress || "", billTextW, 3);
+  const restLines = mobileLines.length + emailLines.length + addrLines.length;
+  const nameH = nameLines.length * 5;
+  const restH = restLines * 4.5;
+  const billBoxH = Math.max(24, 15 + nameH + restH + 4);
+
   doc.setFillColor(...LIGHT);
-  doc.roundedRect(MARGIN, y, contentW, 26, 2, 2, "F");
+  doc.roundedRect(MARGIN, y, contentW, billBoxH, 2, 2, "F");
   sectionTitle(doc, "Bill To", MARGIN + 5, y + 7);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...INK);
-  doc.text(data.patientName, MARGIN + 5, y + 15);
+  let by = y + 15;
+  for (const line of nameLines) {
+    doc.text(line, MARGIN + 5, by);
+    by += 5;
+  }
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  let by = y + 21;
-  if (data.patientPhone) {
-    doc.text(`Mobile: ${data.patientPhone}`, MARGIN + 5, by);
-    by += 5;
-  }
-  if (data.patientEmail) {
-    doc.text(`Email: ${data.patientEmail}`, MARGIN + 5, by);
-    by += 5;
-  }
-  const addrLines = data.patientAddress
-    ? (doc.splitTextToSize(data.patientAddress, contentW - 10) as string[])
-    : [];
-  for (const line of addrLines.slice(0, 1)) {
-    if (by <= y + 24) {
-      doc.text(line as string, MARGIN + 5, by);
-    }
-    by += 5;
+  for (const line of [...mobileLines, ...emailLines, ...addrLines]) {
+    doc.text(line, MARGIN + 5, by);
+    by += 4.5;
   }
 
-  // ---- Services table ----
-  y = 100;
+  y = y + billBoxH + 8;
   autoTable(doc, {
     startY: y,
     margin: { left: MARGIN, right: MARGIN },
