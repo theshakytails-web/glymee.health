@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ConsultationProvider } from "@/context/ConsultationContext";
 import ConsultationModal from "@/components/ConsultationModal";
+import { faqs } from "@/lib/faqs";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -28,7 +29,7 @@ const jsonLd = {
       url: "https://glymee.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://glymee.com/Glymee_logo_1.png",
+        url: "https://glymee.com/icon-512.png",
         width: 512,
         height: 512,
       },
@@ -63,6 +64,15 @@ const jsonLd = {
         target: "https://glymee.com/?q={search_term_string}",
         "query-input": "required name=search_term_string",
       },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://glymee.com/#faq",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
     },
     {
       "@type": "MedicalOrganization",
@@ -126,7 +136,7 @@ export const metadata: Metadata = {
       "Stop guessing, start understanding your diabetes. Personalized consultations and data-driven insights for a sustainable, healthy future.",
     images: [
       {
-        url: "/Glymee_logo_1.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Glymee - Diabetes Health Management Platform",
@@ -138,7 +148,7 @@ export const metadata: Metadata = {
     title: "Glymee | Manage Today. Healthy Tomorrow.",
     description:
       "Stop guessing, start understanding your diabetes. Personalized consultations and data-driven insights.",
-    images: ["/Glymee_logo_1.png"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -157,9 +167,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/Glymee_logo_1.png", type: "image/png", sizes: "512x512" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: "/Glymee_logo_1.png",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
 };
 
@@ -179,8 +190,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/Glymee_logo_1.png" type="image/png" sizes="512x512" />
-        <link rel="apple-touch-icon" href="/Glymee_logo_1.png" />
+        <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link
           href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
           rel="stylesheet"
