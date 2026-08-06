@@ -24,7 +24,14 @@ export const metadata: Metadata = {
     description:
       "Personalized diabetes care with root-cause analysis, continuous glucose monitoring, and data-driven health plans.",
     url: "https://glymee.com",
-    images: ["/Glymee_logo_1.png"],
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Glymee - Diabetes Health Management Platform",
+      },
+    ],
   },
 };
 
