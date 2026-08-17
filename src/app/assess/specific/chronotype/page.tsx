@@ -9,7 +9,7 @@ import ConsentStep from "@/components/assessment/steps/ConsentStep";
 import LifestyleStep from "@/components/assessment/steps/LifestyleStep";
 import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
-import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
+import { calculateWeightedOverall, createScoreResult } from "@/lib/assessment/scoring-engine";
 import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
@@ -35,15 +35,11 @@ export default function ChronotypeAssessmentPage() {
     const { responses } = state;
     // Chronotype assessment determines type rather than a health score
     const chronotypeResult = determineChronotype(responses);
+    const baseResult = createScoreResult(75, chronotypeResult.strengths, chronotypeResult.weaknesses, chronotypeResult.recommendations);
     const categories = {
       chronotype: {
-        score: 75, // Moderate score for chronotype (not a health metric)
-        status: "good" as const,
+        ...baseResult,
         label: chronotypeResult.type,
-        color: "amber",
-        strengths: chronotypeResult.strengths,
-        concerns: chronotypeResult.weaknesses,
-        recommendations: chronotypeResult.recommendations,
       }
     };
     const overall = calculateWeightedOverall(categories, CATEGORY_WEIGHTS.chronotype);

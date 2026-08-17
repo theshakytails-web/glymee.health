@@ -9,7 +9,7 @@ import ConsentStep from "@/components/assessment/steps/ConsentStep";
 import LifestyleStep from "@/components/assessment/steps/LifestyleStep";
 import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
-import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
+import { calculateWeightedOverall, createScoreResult } from "@/lib/assessment/scoring-engine";
 import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
@@ -35,15 +35,11 @@ export default function BrainAssessmentPage() {
     const { responses } = state;
     // Brain fitness uses a simple scoring based on cognitive health questions
     const cognitiveScore = calculateCognitiveScore(responses);
+    const brainResult = createScoreResult(cognitiveScore);
     const categories = {
       brain: {
-        score: cognitiveScore,
-        status: cognitiveScore >= 80 ? "excellent" : cognitiveScore >= 60 ? "good" : cognitiveScore >= 40 ? "needs_attention" : "concerning",
+        ...brainResult,
         label: "Brain Fitness",
-        color: cognitiveScore >= 80 ? "emerald" : cognitiveScore >= 60 ? "amber" : cognitiveScore >= 40 ? "amber" : "rose",
-        strengths: [],
-        concerns: [],
-        recommendations: [],
       }
     };
     const overall = calculateWeightedOverall(categories, CATEGORY_WEIGHTS.brain);

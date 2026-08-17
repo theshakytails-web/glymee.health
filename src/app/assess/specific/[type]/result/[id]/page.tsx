@@ -2,21 +2,16 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Share2, ExternalLink, CheckCircle2, AlertTriangle, Activity, Heart, Brain, Moon, Dumbbell, Utensils, Weight, Shield, Users, Leaf, SmilePlus, Stethoscope, FlaskConical } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import { ASSESSMENT_CONFIGS } from "@/lib/assessment/types";
 import LabValuesUpload from "@/components/assessment/LabValuesUpload";
 
 interface AssessmentResult {
   overallScore: number;
-  overallStatus: "excellent" | "good" | "needs_attention" | "concerning";
+  overallStatus: "good" | "needs_attention" | "higher_risk";
   overallLabel: string;
   categories: Record<string, {
     score: number;
-    status: "excellent" | "good" | "needs_attention" | "concerning";
+    status: "good" | "needs_attention" | "higher_risk";
     label: string;
     color: string;
     strengths: string[];
@@ -29,33 +24,25 @@ interface AssessmentResult {
   assessmentName: string;
 }
 
-const statusColors: Record<string, string> = {
-  excellent: "bg-emerald-500",
-  good: "bg-amber-500",
-  needs_attention: "bg-amber-500",
-  concerning: "bg-rose-500",
+const statusStyles: Record<string, { bg: string; text: string; ring: string }> = {
+  good: { bg: "bg-emerald-500", text: "text-emerald-600", ring: "ring-emerald-500/20" },
+  needs_attention: { bg: "bg-amber-500", text: "text-amber-600", ring: "ring-amber-500/20" },
+  higher_risk: { bg: "bg-rose-500", text: "text-rose-600", ring: "ring-rose-500/20" },
 };
 
-const statusBadgeColors: Record<string, string> = {
-  excellent: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  good: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  needs_attention: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  concerning: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-};
-
-const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  metabolic: Activity,
-  heart: Heart,
-  nutrition: Utensils,
-  activity: Dumbbell,
-  sleep: Moon,
-  mental: Brain,
-  liver: Shield,
-  weight: Weight,
-  lifestyle: Leaf,
-  fitness: Dumbbell,
-  brain: Brain,
-  chronotype: Clock,
+const categoryIconNames: Record<string, string> = {
+  metabolic: "monitor_heart",
+  heart: "favorite",
+  nutrition: "restaurant",
+  activity: "fitness_center",
+  sleep: "bedtime",
+  mental: "psychology",
+  liver: "shield",
+  weight: "scale_weight",
+  lifestyle: "eco",
+  fitness: "fitness_center",
+  brain: "psychology",
+  chronotype: "schedule",
 };
 
 export default function SpecificResultPage({
@@ -78,7 +65,7 @@ export default function SpecificResultPage({
         const parsed = JSON.parse(stored);
         setResult(parsed);
         sessionStorage.removeItem(`assessment-result-${id}`);
-      } catch (e) {
+      } catch {
         setError("Failed to load results");
       }
     } else {
@@ -102,17 +89,18 @@ export default function SpecificResultPage({
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md">
-          <Stethoscope className="h-12 w-12 text-primary mx-auto mb-4" />
+          <span className="material-symbols-outlined text-[48px] text-primary mx-auto mb-4">stethoscope</span>
           <h1 className="font-headline-md text-[24px] font-semibold text-on-background mb-2">
             Results not available
           </h1>
           <p className="font-body-md text-on-surface-variant mb-6">
             {error || "Please retake the assessment to see your results."}
           </p>
-          <Link href="/assess">
-            <Button className="bg-primary text-on-primary hover:bg-primary/90">
-              Go to Assessments
-            </Button>
+          <Link
+            href="/assess"
+            className="inline-block bg-primary text-on-primary px-6 py-3 rounded-lg font-label-lg hover:opacity-90 transition-opacity"
+          >
+            Go to Assessments
           </Link>
         </div>
       </div>
@@ -120,24 +108,22 @@ export default function SpecificResultPage({
   }
 
   const categoryEntries = Object.entries(result.categories);
-  const Icon = categoryIcons[type] || Activity;
+  const iconName = categoryIconNames[type] || "activity_zone";
+  const overallStyle = statusStyles[result.overallStatus] || statusStyles.good;
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top bar */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 border-b border-outline-variant/20">
         <div className="max-w-4xl mx-auto h-full flex items-center justify-between px-4">
           <Link href="/assess" className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors">
-            <ArrowLeft className="h-5 w-5" />
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             <span className="font-label-md hidden sm:inline">Back</span>
           </Link>
           <h1 className="font-headline-sm text-[16px] font-semibold text-on-background truncate max-w-[200px] sm:max-w-none">
             {result.assessmentName} Results
           </h1>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-on-surface-variant hover:text-on-surface">
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </div>
+          <div className="w-10" />
         </div>
       </div>
 
@@ -146,38 +132,36 @@ export default function SpecificResultPage({
           {/* Hero Score Card */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <Icon className="h-6 w-6 text-primary" />
+              <span className="material-symbols-outlined text-[24px] text-primary">{iconName}</span>
               <h2 className="font-headline-lg text-[28px] font-bold text-on-background">
                 Your {config.name} Score
               </h2>
             </div>
-            
-            <Card className="border-0 shadow-xl bg-gradient-to-br from-primary/5 to-primary/10">
-              <CardContent className="p-8 text-center">
-                <div className="relative inline-block mb-6">
-                  <div className="w-32 h-32 rounded-full border-8 border-primary/20 flex items-center justify-center">
-                    <span className="font-headline-lg text-[48px] font-bold text-primary">
-                      {result.overallScore}
-                    </span>
-                  </div>
-                  <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${statusColors[result.overallStatus]}`} />
+
+            <div className="border-0 shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 text-center">
+              <div className="relative inline-block mb-6">
+                <div className="w-32 h-32 rounded-full border-8 border-primary/20 flex items-center justify-center">
+                  <span className="font-headline-lg text-[48px] font-bold text-primary">
+                    {result.overallScore}
+                  </span>
                 </div>
-                
-                <h3 className="font-headline-md text-[24px] font-semibold text-on-background mb-2">
-                  {result.overallLabel}
-                </h3>
-                <Badge variant="outline" className={`${statusBadgeColors[result.overallStatus]} border font-label-sm`}>
-                  {result.overallStatus.replace("_", " ")}
-                </Badge>
-              </CardContent>
-            </Card>
+                <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${overallStyle.bg}`} />
+              </div>
+
+              <h3 className="font-headline-md text-[24px] font-semibold text-on-background mb-2">
+                {result.overallLabel}
+              </h3>
+              <span className={`inline-block px-3 py-1 rounded-full text-[12px] font-medium border ${overallStyle.text} ${overallStyle.ring} bg-current/5 border-current/10`}>
+                {result.overallStatus.replace(/_/g, " ")}
+              </span>
+            </div>
           </div>
 
           {/* Strengths */}
           {result.strengths.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                <span className="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
                 <h3 className="font-headline-sm text-[18px] font-semibold text-on-background">
                   Your Strengths
                 </h3>
@@ -185,7 +169,7 @@ export default function SpecificResultPage({
               <div className="space-y-3">
                 {result.strengths.map((strength, index) => (
                   <div key={index} className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
+                    <span className="material-symbols-outlined text-[20px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
                     <p className="font-body-md text-on-surface">{strength}</p>
                   </div>
                 ))}
@@ -197,7 +181,7 @@ export default function SpecificResultPage({
           {result.concerns.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <span className="material-symbols-outlined text-[20px] text-amber-500">warning</span>
                 <h3 className="font-headline-sm text-[18px] font-semibold text-on-background">
                   Areas to Watch
                 </h3>
@@ -205,7 +189,7 @@ export default function SpecificResultPage({
               <div className="space-y-3">
                 {result.concerns.map((concern, index) => (
                   <div key={index} className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                    <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                    <span className="material-symbols-outlined text-[20px] text-amber-500 mt-0.5 shrink-0">warning</span>
                     <p className="font-body-md text-on-surface">{concern}</p>
                   </div>
                 ))}
@@ -220,51 +204,56 @@ export default function SpecificResultPage({
                 Detailed Breakdown
               </h3>
               <div className="space-y-4">
-                {categoryEntries.map(([key, category]) => (
-                  <Card key={key} className="border-0 shadow-lg">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="font-headline-sm text-[16px] font-semibold">
+                {categoryEntries.map(([key, category]) => {
+                  const catStyle = statusStyles[category.status] || statusStyles.good;
+                  return (
+                    <div key={key} className="border-0 shadow-lg bg-surface rounded-2xl p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-headline-sm text-[16px] font-semibold text-on-background">
                           {category.label}
-                        </CardTitle>
-                        <Badge variant="outline" className={`${statusBadgeColors[category.status]} border font-label-sm`}>
+                        </h4>
+                        <span className={`px-2 py-0.5 rounded-full text-[12px] font-medium border ${catStyle.text} ${catStyle.ring} bg-current/5 border-current/10`}>
                           {category.score}
-                        </Badge>
+                        </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <Progress value={category.score} className="h-2 mb-3" />
-                      
+
+                      <div className="h-2 bg-outline-variant/20 rounded-full overflow-hidden mb-3">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${catStyle.bg}`}
+                          style={{ width: `${category.score}%` }}
+                        />
+                      </div>
+
                       {category.strengths.length > 0 && (
-                        <div className="mb-3">
-                          <h4 className="font-label-sm text-[12px] font-medium text-emerald-600 mb-1">Strengths</h4>
+                        <div className="mb-2">
+                          <h5 className="font-label-sm text-[12px] font-medium text-emerald-600 mb-1">Strengths</h5>
                           <ul className="space-y-1">
                             {category.strengths.map((s, i) => (
                               <li key={i} className="flex items-start gap-2 text-[13px] text-on-surface-variant">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
+                                <span className="material-symbols-outlined text-[14px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
                                 {s}
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
-                      
+
                       {category.concerns.length > 0 && (
                         <div>
-                          <h4 className="font-label-sm text-[12px] font-medium text-amber-600 mb-1">Concerns</h4>
+                          <h5 className="font-label-sm text-[12px] font-medium text-amber-600 mb-1">Concerns</h5>
                           <ul className="space-y-1">
                             {category.concerns.map((c, i) => (
                               <li key={i} className="flex items-start gap-2 text-[13px] text-on-surface-variant">
-                                <AlertTriangle className="h-3 w-3 text-amber-500 mt-0.5 shrink-0" />
+                                <span className="material-symbols-outlined text-[14px] text-amber-500 mt-0.5 shrink-0">warning</span>
                                 {c}
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -273,7 +262,7 @@ export default function SpecificResultPage({
           {result.recommendations.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <ExternalLink className="h-5 w-5 text-primary" />
+                <span className="material-symbols-outlined text-[20px] text-primary">open_in_new</span>
                 <h3 className="font-headline-sm text-[18px] font-semibold text-on-background">
                   Recommended Next Steps
                 </h3>
@@ -294,7 +283,7 @@ export default function SpecificResultPage({
             <div className="mb-8">
               <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
                 <div className="flex items-center gap-3 mb-3">
-                  <FlaskConical className="h-5 w-5 text-primary" />
+                  <span className="material-symbols-outlined text-[20px] text-primary">science</span>
                   <h3 className="font-headline-sm text-[18px] font-semibold text-on-background">
                     Improve Accuracy with Lab Values
                   </h3>
@@ -330,15 +319,17 @@ export default function SpecificResultPage({
               Want to explore other assessments?
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/assess">
-                <Button variant="outline" className="border-primary text-primary hover:bg-primary/5">
-                  All Assessments
-                </Button>
+              <Link
+                href="/assess"
+                className="border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-lg font-label-lg transition-colors text-center"
+              >
+                All Assessments
               </Link>
-              <Link href="/assess/full">
-                <Button className="bg-primary text-on-primary hover:bg-primary/90">
-                  Try Full Assessment
-                </Button>
+              <Link
+                href="/assess/full"
+                className="bg-primary text-on-primary hover:opacity-90 px-6 py-3 rounded-lg font-label-lg transition-opacity text-center"
+              >
+                Try Full Assessment
               </Link>
             </div>
           </div>
