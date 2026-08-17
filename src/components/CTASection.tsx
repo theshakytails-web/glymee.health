@@ -1,3 +1,4 @@
+import Link from "next/link";
 import BookButton from "./BookButton";
 
 export default function CTASection() {
@@ -10,9 +11,15 @@ export default function CTASection() {
           </h2>
           <p className="font-body-md text-[15px] md:text-[16px] leading-[22px] md:leading-[24px] opacity-90">
             Ready to uncover the &ldquo;why&rdquo; behind your blood sugar?
-            Book your initial discovery session with our team.
+            Take our free health assessment or book a discovery session.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Link
+              href="/assess"
+              className="bg-white text-primary px-6 sm:px-10 py-3 md:py-4 rounded-lg font-headline-md text-[16px] md:text-[20px] leading-[24px] md:leading-[28px] font-semibold hover:bg-opacity-90 transition-all w-full sm:w-auto"
+            >
+              Take Free Assessment
+            </Link>
             <BookButton variant="white" className="w-full sm:w-auto" />
             <button className="bg-primary-container text-white px-6 sm:px-10 py-3 md:py-4 rounded-lg font-headline-md text-[16px] md:text-[20px] leading-[24px] md:leading-[28px] font-semibold hover:bg-opacity-90 transition-all border border-white/20 w-full sm:w-auto">
               View Pricing
