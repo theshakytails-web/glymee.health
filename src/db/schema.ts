@@ -206,3 +206,100 @@ export const refreshTokens = sqliteTable("refresh_tokens", {
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
+
+// ─── Assessment System Tables ────────────────────────────────────────────────
+
+export const assessmentDefinitions = sqliteTable("assessment_definitions", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull().default("health_and_safety"),
+  estimatedMinutes: integer("estimated_minutes").notNull().default(5),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const assessmentSections = sqliteTable("assessment_sections", {
+  id: text("id").primaryKey(),
+  assessmentId: text("assessment_id").notNull(),
+  slug: text("slug").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const assessmentQuestions = sqliteTable("assessment_questions", {
+  id: text("id").primaryKey(),
+  sectionId: text("section_id").notNull(),
+  questionKey: text("question_key").notNull(),
+  questionText: text("question_text").notNull(),
+  questionType: text("question_type", {
+    enum: ["select", "multi_select", "number", "text", "scale", "yes_no"],
+  }).notNull(),
+  optionsJson: text("options_json"),
+  unit: text("unit"),
+  minValue: real("min_value"),
+  maxValue: real("max_value"),
+  placeholder: text("placeholder"),
+  helperText: text("helper_text"),
+  isRequired: integer("is_required", { mode: "boolean" }).notNull().default(true),
+  parentQuestionId: text("parent_question_id"),
+  conditionJson: text("condition_json"),
+  weight: real("weight").notNull().default(1),
+  scoringRulesJson: text("scoring_rules_json"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const assessmentSubmissions = sqliteTable("assessment_submissions", {
+  id: text("id").primaryKey(),
+  assessmentSlug: text("assessment_slug").notNull(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  age: integer("age").notNull(),
+  gender: text("gender").notNull(),
+  heightCm: real("height_cm"),
+  weightKg: real("weight_kg"),
+  bmi: real("bmi"),
+  city: text("city"),
+  status: text("status", { enum: ["in_progress", "completed"] })
+    .notNull()
+    .default("in_progress"),
+  currentStep: integer("current_step").notNull().default(0),
+  overallScore: real("overall_score"),
+  overallStatus: text("overall_status", {
+    enum: ["good", "needs_attention", "higher_risk"],
+  }),
+  scoresJson: text("scores_json"),
+  strengthsJson: text("strengths_json"),
+  concernsJson: text("concerns_json"),
+  recommendationsJson: text("recommendations_json"),
+  consentGiven: integer("consent_given", { mode: "boolean" }).notNull().default(false),
+  consentText: text("consent_text"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  completedAt: integer("completed_at", { mode: "timestamp" }),
+});
+
+export const assessmentResponses = sqliteTable("assessment_responses", {
+  id: text("id").primaryKey(),
+  submissionId: text("submission_id").notNull(),
+  questionId: text("question_id").notNull(),
+  questionKey: text("question_key").notNull(),
+  responseValue: text("response_value").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const assessmentUploads = sqliteTable("assessment_uploads", {
+  id: text("id").primaryKey(),
+  submissionId: text("submission_id").notNull(),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
