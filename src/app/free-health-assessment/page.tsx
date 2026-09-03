@@ -50,9 +50,9 @@ export default function FreeHealthAssessmentPage() {
             <span className="text-primary">Free Health Assessment</span>
           </h1>
           <p className="font-body-lg text-[15px] md:text-[17px] leading-[24px] md:leading-[28px] text-on-surface-variant max-w-lg mx-auto">
-            Help us understand your health history, lifestyle and goals. Our
-            team will review your details and reach out to explain how the
-            3-month personalized diabetes-management program can help you.
+            Just share your basic contact details to begin. Then start your free
+            health assessment to understand the areas of your health that may
+            need more attention.
           </p>
         </div>
 
