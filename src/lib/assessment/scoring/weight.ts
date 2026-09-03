@@ -36,18 +36,22 @@ export function calculateWeightScore(
   else if (change?.includes("Gained 5-10")) { points += 8; concerns.push("Recent weight gain"); }
   else { points += 4; concerns.push("Significant weight gain"); }
 
-  // Diabetes (0-20)
-  maxPoints += 20;
+  // Diabetes (0-20) - only scored if the assessment collected this
   const diabetes = responses.diabetes as string;
-  if (diabetes === "No") { points += 20; strengths.push("No diabetes"); }
-  else if (diabetes?.includes("prediabetes")) { points += 10; concerns.push("Prediabetes affects metabolic health"); }
-  else { points += 5; concerns.push("Diabetes management important"); }
+  if (diabetes) {
+    maxPoints += 20;
+    if (diabetes === "No") { points += 20; strengths.push("No diabetes"); }
+    else if (diabetes?.includes("prediabetes")) { points += 10; concerns.push("Prediabetes affects metabolic health"); }
+    else { points += 5; concerns.push("Diabetes management important"); }
+  }
 
-  // BP (0-15)
-  maxPoints += 15;
+  // BP (0-15) - only scored if the assessment collected this
   const bp = responses.bp_history as string;
-  if (bp === "No") { points += 15; strengths.push("Normal blood pressure"); }
-  else { points += 6; concerns.push("High blood pressure"); }
+  if (bp) {
+    maxPoints += 15;
+    if (bp === "No") { points += 15; strengths.push("Normal blood pressure"); }
+    else { points += 6; concerns.push("High blood pressure"); }
+  }
 
   // Exercise (0-15)
   maxPoints += 15;

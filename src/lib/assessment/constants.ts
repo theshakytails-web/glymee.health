@@ -224,5 +224,20 @@ export const SCALE_LABELS: Record<number, string[]> = {
   10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
 };
 
+// Response keys required by the shared LifestyleStep component (isRequired fields).
+export const LIFESTYLE_STEP_REQUIRED = [
+  "sleep_duration",
+  "sleep_quality",
+  "exercise_days",
+  "steps_per_day",
+  "sitting_hours",
+  "tobacco_use",
+  "alcohol_use",
+  "stress_level",
+];
+
+export const NON_EMPTY_ARRAY = (v: unknown): boolean =>
+  Array.isArray(v) && v.length > 0;
+
 export const MAX_FILE_SIZE_MB = 10;
 export const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];

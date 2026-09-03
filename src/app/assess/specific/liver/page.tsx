@@ -11,7 +11,7 @@ import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
 import { calculateLiverScore } from "@/lib/assessment/scoring/liver";
 import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function LiverAssessmentPage() {
@@ -55,18 +55,25 @@ export default function LiverAssessmentPage() {
     }
     if (step === 1) {
       if (!responses.liver_disease) return "Please answer: Have you been diagnosed with any liver disease?";
-      if (!responses.alcohol_use) return "Please answer: How often do you consume alcohol?";
-      if (!responses.hepatitis) return "Please answer: Have you been diagnosed with hepatitis?";
-      if (!responses.diabetes) return "Please answer: Do you have diabetes?";
+      if (!responses.alcohol_frequency) return "Please answer: How often do you consume alcohol?";
+      if (!responses.alcohol_amount) return "Please answer: How many standard drinks do you have per occasion?";
       return null;
     }
     if (step === 2) {
-      if (!responses.exercise_days) return "Please answer: How many days per week do you exercise?";
-      if (!responses.fried_processed) return "Please answer: How often do you eat fried or processed food?";
-      if (!responses.sugary_drinks) return "Please answer: How often do you drink sugary drinks?";
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
       return null;
     }
-    if (step === 3) return null;
+    if (step === 3) {
+      if (!Array.isArray(responses.liver_symptoms) || responses.liver_symptoms.length === 0)
+        return "Please select at least one option (or 'None of the above')";
+      if (!responses.fatty_liver) return "Please answer: Have you ever been told you have fatty liver?";
+      return null;
+    }
+    if (step === 4) return null;
     return null;
   }, [state]);
 

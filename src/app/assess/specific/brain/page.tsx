@@ -10,7 +10,7 @@ import LifestyleStep from "@/components/assessment/steps/LifestyleStep";
 import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
 import { calculateWeightedOverall, createScoreResult } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function BrainAssessmentPage() {
@@ -93,7 +93,16 @@ export default function BrainAssessmentPage() {
       return null;
     }
     if (step === 2) {
-      if (!responses.sleep_quality) return "Please answer: How would you rate your sleep quality?";
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
+      return null;
+    }
+    if (step === 3) {
+      if (!Array.isArray(responses.cognitive_concerns) || responses.cognitive_concerns.length === 0)
+        return "Please select at least one option";
       if (!responses.sleep_hours) return "Please answer: How many hours of sleep do you get?";
       return null;
     }

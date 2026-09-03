@@ -11,7 +11,7 @@ import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
 import { calculateMentalScore } from "@/lib/assessment/scoring/mental";
 import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function MentalAssessmentPage() {
@@ -60,12 +60,25 @@ export default function MentalAssessmentPage() {
       return null;
     }
     if (step === 2) {
-      if (!responses.sleep_quality) return "Please answer: How would you rate your sleep quality?";
-      if (!responses.social_connection) return "Please answer: How would you rate your social connection?";
-      if (!responses.work_pressure) return "Please answer: How would you rate your work pressure?";
-      if (!responses.exercise_days) return "Please answer: How many days per week do you exercise?";
+      if (!responses.anxiety_frequency) return "Please answer: How often do you experience anxiety or worry?";
+      if (!responses.mood_overall) return "Please answer: How would you rate your mood overall?";
+      if (!responses.motivation_frequency) return "Please answer: How often do you feel motivated to do things?";
       return null;
     }
+    if (step === 3) {
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
+      return null;
+    }
+    if (step === 4) {
+      if (!responses.mental_health_diagnosis) return "Please answer: Have you been diagnosed with any mental health condition?";
+      if (!responses.mental_health_medication) return "Please answer: Are you currently taking any medication for mental health?";
+      return null;
+    }
+    if (step === 5) return null;
     return null;
   }, [state]);
 

@@ -24,7 +24,7 @@ import { calculateLiverScore } from "@/lib/assessment/scoring/liver";
 import { calculateWeightScore } from "@/lib/assessment/scoring/weight";
 import { calculateLifestyleScore } from "@/lib/assessment/scoring/lifestyle";
 import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED, NUTRITION_QUESTIONS } from "@/lib/assessment/constants";
 
 export default function FullAssessmentPage() {
   const router = useRouter();
@@ -43,6 +43,49 @@ export default function FullAssessmentPage() {
   const handleStepChange = useCallback((step: number) => {
     setCurrentStep(step);
   }, []);
+
+  const validateStep = useCallback((step: number): string | null => {
+    const { profile, responses } = state;
+    switch (step) {
+      case 0:
+        if (!profile.fullName) return "Please enter your full name";
+        if (!profile.age || profile.age <= 0) return "Please enter a valid age";
+        if (!profile.gender) return "Please select your gender";
+        if (!profile.heightCm || profile.heightCm <= 0) return "Please enter your height";
+        if (!profile.weightKg || profile.weightKg <= 0) return "Please enter your weight";
+        if (!profile.city) return "Please enter your city";
+        if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) return "Please enter a valid email address";
+        return null;
+      case 1:
+        if (!Array.isArray(responses.medical_conditions) || responses.medical_conditions.length === 0)
+          return "Please select at least one condition";
+        return null;
+      case 2:
+        if (!Array.isArray(responses.family_conditions) || responses.family_conditions.length === 0)
+          return "Please select at least one family condition";
+        return null;
+      case 3:
+        for (const key of LIFESTYLE_STEP_REQUIRED) {
+          if (!responses[key]) return "Please answer the required lifestyle questions above";
+        }
+        return null;
+      case 4:
+        for (const q of NUTRITION_QUESTIONS) {
+          if (!responses[q.key]) return `Please answer: ${q.label}`;
+        }
+        return null;
+      case 5:
+        if (!Array.isArray(responses.current_symptoms) || responses.current_symptoms.length === 0)
+          return "Please select at least one option (or 'None of the above')";
+        return null;
+      case 6:
+        return null;
+      case 7:
+        return null;
+      default:
+        return null;
+    }
+  }, [state]);
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true);
@@ -143,6 +186,7 @@ export default function FullAssessmentPage() {
       onStepChange={handleStepChange}
       onSubmit={handleSubmit}
       isSubmitting={state.isSubmitting}
+      validateStep={validateStep}
     >
       {renderStep()}
     </AssessmentWizard>

@@ -11,7 +11,7 @@ import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
 import { calculateWeightScore } from "@/lib/assessment/scoring/weight";
 import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function WeightAssessmentPage() {
@@ -60,20 +60,20 @@ export default function WeightAssessmentPage() {
     }
     if (step === 1) {
       if (!responses.weight_change) return "Please answer: Has your weight changed significantly in the past year?";
-      if (!responses.weight_tried) return "Please answer: What methods have you tried to manage your weight?";
+      if (!responses.weight_goal) return "Please answer: What is your primary goal?";
       return null;
     }
     if (step === 2) {
-      if (!responses.diabetes) return "Please answer: Do you have diabetes?";
-      if (!responses.bp_history) return "Please answer: Do you have a history of high blood pressure?";
-      if (!responses.cholesterol_history) return "Please answer: Do you have a history of high cholesterol?";
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
       return null;
     }
     if (step === 3) {
       if (!responses.exercise_days) return "Please answer: How many days per week do you exercise?";
       if (!responses.sleep_quality) return "Please answer: How would you rate your sleep quality?";
-      if (!responses.stress_level) return "Please answer: How would you rate your stress level?";
-      if (!responses.sugary_drinks) return "Please answer: How often do you drink sugary drinks?";
       return null;
     }
     if (step === 4) return null;

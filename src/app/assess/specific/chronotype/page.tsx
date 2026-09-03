@@ -10,7 +10,7 @@ import LifestyleStep from "@/components/assessment/steps/LifestyleStep";
 import QuestionCard from "@/components/assessment/ui/QuestionCard";
 import OptionChips from "@/components/assessment/ui/OptionChips";
 import { calculateWeightedOverall, createScoreResult } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function ChronotypeAssessmentPage() {
@@ -129,13 +129,22 @@ export default function ChronotypeAssessmentPage() {
       if (!responses.preferred_wake_time) return "Please answer: What time would you naturally wake up?";
       if (!responses.natural_wake_time) return "Please answer: When do you naturally wake up on weekends?";
       if (!responses.peak_performance_time) return "Please answer: When is your peak performance time?";
-      if (!responses.morning_sleepiness) return "Please answer: How would you describe your morning alertness?";
       return null;
     }
     if (step === 2) {
+      if (!responses.morning_sleepiness) return "Please answer: How would you describe your morning alertness?";
       if (!responses.morning_caffeine) return "Please answer: How many cups of coffee/tea do you drink before noon?";
       return null;
     }
+    if (step === 3) {
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
+      return null;
+    }
+    if (step === 4) return null;
     return null;
   }, [state]);
 

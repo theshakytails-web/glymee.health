@@ -15,7 +15,7 @@ import OptionChips from "@/components/assessment/ui/OptionChips";
 import NumberInput from "@/components/assessment/ui/NumberInput";
 import { calculateMetabolicScore } from "@/lib/assessment/scoring/metabolic";
 import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function BloodSugarAssessmentPage() {
@@ -43,9 +43,14 @@ export default function BloodSugarAssessmentPage() {
         ? Math.round((profile.weightKg / Math.pow(profile.heightCm / 100, 2)) * 10) / 10
         : 0;
     const profileData = { age: profile.age, gender: profile.gender, bmi };
-    
+
+    const scoringResponses = {
+      ...responses,
+      current_symptoms: responses.bs_symptoms,
+    };
+
     const categories = {
-      metabolic: calculateMetabolicScore(responses, profileData),
+      metabolic: calculateMetabolicScore(scoringResponses, profileData),
     };
 
     const overall = calculateWeightedOverall(categories, CATEGORY_WEIGHTS.blood_sugar);
@@ -66,23 +71,34 @@ export default function BloodSugarAssessmentPage() {
       return null;
     }
     if (step === 1) {
-      if (!responses.diabetes_diagnosis) return "Please answer: Have you been diagnosed with diabetes?";
+      if (!Array.isArray(responses.medical_conditions) || responses.medical_conditions.length === 0)
+        return "Please select at least one condition";
       return null;
     }
     if (step === 2) {
-      if (!responses.family_diabetes) return "Please answer: Do you have a family history of diabetes?";
-      if (!responses.exercise_days) return "Please answer: How many days per week do you exercise?";
-      if (!responses.sugary_drinks) return "Please answer: How often do you drink sugary drinks?";
-      if (!responses.sleep_duration) return "Please answer: How many hours of sleep do you get?";
-      if (!responses.stress_level) return "Please answer: How would you rate your stress level?";
-      if (!responses.bp_history) return "Please answer: Do you have a history of high blood pressure?";
+      if (!Array.isArray(responses.family_conditions) || responses.family_conditions.length === 0)
+        return "Please select at least one family condition";
       return null;
     }
     if (step === 3) {
-      if (!responses.bs_symptoms || (Array.isArray(responses.bs_symptoms) && responses.bs_symptoms.length === 0)) return "Please answer: Do you currently experience any symptoms?";
+      if (!Array.isArray(responses.bs_symptoms) || responses.bs_symptoms.length === 0)
+        return "Please select at least one option (or 'None of the above')";
       return null;
     }
-    if (step === 4) return null;
+    if (step === 4) {
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
+      return null;
+    }
+    if (step === 5) {
+      if (!responses.exercise_days) return "Please answer: How many days per week do you exercise?";
+      if (!responses.sugary_drinks) return "Please answer: How often do you drink sugary drinks?";
+      return null;
+    }
+    if (step === 6) return null;
     return null;
   }, [state]);
 

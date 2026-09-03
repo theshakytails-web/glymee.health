@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useAssessment } from "@/context/AssessmentContext";
 import AssessmentHeader from "./shared/AssessmentHeader";
 import ProgressIndicator from "./ProgressIndicator";
@@ -27,10 +27,16 @@ export default function AssessmentWizard({
   isSubmitting,
   validateStep,
 }: AssessmentWizardProps) {
-  const { prevStep } = useAssessment();
+  const { state, prevStep } = useAssessment();
   const [error, setError] = useState<string | null>(null);
   const isLastStep = currentStep === steps.length - 1;
   const isFirstStep = currentStep === 0;
+
+  // Clear the validation error as soon as the user answers a question
+  // (responses/profile change) so it does not linger after they select an option.
+  useEffect(() => {
+    setError(null);
+  }, [state.responses, state.profile]);
 
   const handleBack = useCallback(() => {
     setError(null);

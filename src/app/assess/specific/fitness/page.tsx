@@ -12,7 +12,7 @@ import OptionChips from "@/components/assessment/ui/OptionChips";
 import NumberInput from "@/components/assessment/ui/NumberInput";
 import { calculateActivityScore } from "@/lib/assessment/scoring/activity";
 import { calculateWeightedOverall } from "@/lib/assessment/scoring-engine";
-import { CATEGORY_WEIGHTS } from "@/lib/assessment/constants";
+import { CATEGORY_WEIGHTS, LIFESTYLE_STEP_REQUIRED } from "@/lib/assessment/constants";
 import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function FitnessAssessmentPage() {
@@ -56,16 +56,24 @@ export default function FitnessAssessmentPage() {
     }
     if (step === 1) {
       if (!responses.exercise_days) return "Please answer: How many days per week do you exercise?";
-      if (!responses.steps_per_day) return "Please answer: How many steps do you take per day?";
-      if (!responses.sitting_hours) return "Please answer: How many hours do you sit per day?";
+      if (!Array.isArray(responses.exercise_types) || responses.exercise_types.length === 0)
+        return "Please select at least one type of exercise";
+      if (!responses.workout_duration) return "Please answer: How long is a typical workout session?";
       return null;
     }
     if (step === 2) {
-      if (!responses.walk_30min) return "Please answer: Can you walk for 30 minutes without stopping?";
-      if (!responses.strength_training) return "Please answer: How often do you do strength training?";
-      if (!responses.energy_level) return "Please answer: How would you rate your energy level?";
+      if (!responses.fitness_level) return "Please answer: How would you rate your fitness level?";
       return null;
     }
+    if (step === 3) {
+      for (const key of LIFESTYLE_STEP_REQUIRED) {
+        if (!responses[key]) {
+          return "Please answer the required lifestyle questions above";
+        }
+      }
+      return null;
+    }
+    if (step === 4) return null;
     return null;
   }, [state]);
 

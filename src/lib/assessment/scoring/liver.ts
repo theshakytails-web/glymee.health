@@ -15,26 +15,30 @@ export function calculateLiverScore(responses: Record<string, unknown>): ScoreRe
   else if (liver === "Not sure") { points += 12; recommendations.push("Consider a liver function test"); }
   else { points += 5; concerns.push("Previous liver disease diagnosis"); recommendations.push("Regular monitoring recommended"); }
 
-  // Alcohol (0-25)
+  // Alcohol (0-25) - uses alcohol_frequency (liver assessment) or alcohol_use (lifestyle)
   maxPoints += 25;
-  const alcohol = responses.alcohol_use as string;
+  const alcohol = (responses.alcohol_frequency || responses.alcohol_use) as string;
   if (alcohol?.includes("Never")) { points += 25; strengths.push("Non-drinker"); }
-  else if (alcohol?.includes("Occasionally")) { points += 18; }
-  else if (alcohol?.includes("Regularly")) { points += 8; concerns.push("Regular alcohol consumption affects liver health"); recommendations.push("Consider reducing alcohol intake"); }
+  else if (alcohol?.includes("Occasionally") || alcohol?.includes("1-2 times/month")) { points += 18; }
+  else if (alcohol?.includes("Regularly") || alcohol?.includes("Weekly") || alcohol?.includes("1-3 times")) { points += 8; concerns.push("Regular alcohol consumption affects liver health"); recommendations.push("Consider reducing alcohol intake"); }
   else { points += 3; concerns.push("Frequent alcohol consumption"); recommendations.push("Alcohol is a major risk factor for liver disease"); }
 
-  // Hepatitis (0-15)
-  maxPoints += 15;
+  // Hepatitis (0-15) - only scored if collected
   const hep = responses.hepatitis as string;
-  if (hep === "No") { points += 15; }
-  else if (hep === "Not sure") { points += 8; }
-  else { points += 3; concerns.push("Hepatitis history"); }
+  if (hep) {
+    maxPoints += 15;
+    if (hep === "No") { points += 15; }
+    else if (hep === "Not sure") { points += 8; }
+    else { points += 3; concerns.push("Hepatitis history"); }
+  }
 
-  // Diabetes (0-15)
-  maxPoints += 15;
+  // Diabetes (0-15) - only scored if collected
   const diabetes = responses.diabetes as string;
-  if (diabetes === "No") { points += 15; }
-  else { points += 6; concerns.push("Diabetes is a risk factor for fatty liver"); }
+  if (diabetes) {
+    maxPoints += 15;
+    if (diabetes === "No") { points += 15; }
+    else { points += 6; concerns.push("Diabetes is a risk factor for fatty liver"); }
+  }
 
   // Exercise (0-10)
   maxPoints += 10;
@@ -43,12 +47,14 @@ export function calculateLiverScore(responses: Record<string, unknown>): ScoreRe
   else if (exercise?.includes("3-4")) { points += 7; }
   else { points += 3; }
 
-  // Fried food (0-10)
-  maxPoints += 10;
+  // Fried food (0-10) - only scored if collected
   const fried = responses.fried_processed as string;
-  if (fried?.includes("Rarely")) { points += 10; strengths.push("Low processed food intake"); }
-  else if (fried?.includes("1-3")) { points += 7; }
-  else { points += 3; concerns.push("High processed food intake may affect liver"); }
+  if (fried) {
+    maxPoints += 10;
+    if (fried?.includes("Rarely")) { points += 10; strengths.push("Low processed food intake"); }
+    else if (fried?.includes("1-3")) { points += 7; }
+    else { points += 3; concerns.push("High processed food intake may affect liver"); }
+  }
 
   const score = maxPoints > 0 ? Math.round((points / maxPoints) * 100) : 50;
   return createScoreResult(score, strengths, concerns, recommendations);

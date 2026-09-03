@@ -31,21 +31,25 @@ export function calculateMentalScore(responses: Record<string, unknown>): ScoreR
   else if (exercise?.includes("1-2")) { points += 8; }
   else { points += 3; recommendations.push("Physical activity can significantly improve mood"); }
 
-  // Social connection (0-15)
-  maxPoints += 15;
+  // Social connection (0-15) - only scored if collected
   const social = responses.social_connection as string;
-  if (social?.includes("Most days")) { points += 15; strengths.push("Strong social connection"); }
-  else if (social?.includes("few times")) { points += 10; }
-  else if (social?.includes("Once a week")) { points += 6; }
-  else { points += 2; concerns.push("Limited social connection"); recommendations.push("Try to connect with friends or family regularly"); }
+  if (social) {
+    maxPoints += 15;
+    if (social?.includes("Most days")) { points += 15; strengths.push("Strong social connection"); }
+    else if (social?.includes("few times")) { points += 10; }
+    else if (social?.includes("Once a week")) { points += 6; }
+    else { points += 2; concerns.push("Limited social connection"); recommendations.push("Try to connect with friends or family regularly"); }
+  }
 
-  // Work pressure (0-15)
-  maxPoints += 15;
+  // Work pressure (0-15) - only scored if collected
   const work = responses.work_pressure as string;
-  if (work === "Low") { points += 15; }
-  else if (work === "Moderate") { points += 11; }
-  else if (work === "High") { points += 6; concerns.push("High work/life pressure"); }
-  else { points += 2; concerns.push("Very high work pressure"); }
+  if (work) {
+    maxPoints += 15;
+    if (work === "Low") { points += 15; }
+    else if (work === "Moderate") { points += 11; }
+    else if (work === "High") { points += 6; concerns.push("High work/life pressure"); }
+    else { points += 2; concerns.push("Very high work pressure"); }
+  }
 
   const score = maxPoints > 0 ? Math.round((points / maxPoints) * 100) : 50;
   return createScoreResult(score, strengths, concerns, recommendations);
