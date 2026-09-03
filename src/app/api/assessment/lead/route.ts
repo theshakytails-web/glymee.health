@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBrevo, CONFIRMATION_SENDER_EMAIL, CONFIRMATION_SENDER_NAME, ADMIN_SENDER_EMAIL, ADMIN_SENDER_NAME, ADMIN_EMAIL } from "@/lib/brevo";
+import { getLeadConfirmationEmail, getLeadAdminNotificationEmail, type LeadFormData } from "@/lib/email-templates";
 import { db } from "@/db";
 import { consultations } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -73,6 +74,19 @@ export async function POST(request: NextRequest) {
     await consumeRateLimit(`lead:email:${email}`, ONE_HOUR);
 
     const lead = data as unknown as LeadData;
+    const emailData: LeadFormData = {
+      fullName: lead.fullName.trim(),
+      age: lead.age,
+      phone: lead.phone.trim(),
+      email,
+      city: lead.city.trim(),
+      diabetesStatus: lead.diabetesStatus || "",
+      diabetesType: lead.diabetesType || "",
+      duration: lead.duration || "",
+      currentMedications: lead.currentMedications || "",
+      mainConcern: lead.mainConcern || "",
+      contactMethod: lead.contactMethod || "",
+    };
 
     const additionalNotes = [
       `Preferred contact method: ${lead.contactMethod || "N/A"}`,
@@ -113,11 +127,7 @@ export async function POST(request: NextRequest) {
         sender: { email: CONFIRMATION_SENDER_EMAIL, name: CONFIRMATION_SENDER_NAME },
         to: [{ email, name: lead.fullName.trim() }],
         subject: "We've Received Your Health Assessment Details - Glymee Health",
-        htmlContent: `<p>Hi ${lead.fullName.trim()},</p>
-          <p>Thank you for starting your Glymee health assessment.</p>
-          <p>Our team will review your details and reach out via ${lead.contactMethod || "your preferred method"} to explain the 3-month personalized diabetes-management program.</p>
-          <p>In the meantime, if you have any questions, you can reach us on WhatsApp.</p>
-          <p>Warm regards,<br/>The Glymee Health Team</p>`,
+        htmlContent: getLeadConfirmationEmail(emailData),
         tags: ["lead", "confirmation"],
       });
 
@@ -125,18 +135,7 @@ export async function POST(request: NextRequest) {
         sender: { email: ADMIN_SENDER_EMAIL, name: ADMIN_SENDER_NAME },
         to: [{ email: ADMIN_EMAIL, name: "Glymee Admin" }],
         subject: `New Health Assessment Lead from ${lead.fullName.trim()}`,
-        htmlContent: `<p>A new health assessment lead has been received.</p>
-          <p><strong>Name:</strong> ${lead.fullName}</p>
-          <p><strong>Age:</strong> ${lead.age}</p>
-          <p><strong>Phone:</strong> ${lead.phone}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>City:</strong> ${lead.city}</p>
-          <p><strong>Diabetes status:</strong> ${lead.diabetesStatus || "N/A"}</p>
-          <p><strong>Diabetes type:</strong> ${lead.diabetesType || "N/A"}</p>
-          <p><strong>Duration:</strong> ${lead.duration || "N/A"}</p>
-          <p><strong>Medications:</strong> ${lead.currentMedications || "N/A"}</p>
-          <p><strong>Main concern:</strong> ${lead.mainConcern || "N/A"}</p>
-          <p><strong>Preferred contact:</strong> ${lead.contactMethod || "N/A"}</p>`,
+        htmlContent: getLeadAdminNotificationEmail(emailData),
         replyTo: { email, name: lead.fullName.trim() },
         tags: ["lead", "notification"],
       });

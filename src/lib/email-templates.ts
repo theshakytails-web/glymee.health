@@ -176,6 +176,117 @@ export function getAdminNotificationEmail(data: ConsultationFormData): string {
   `);
 }
 
+export interface LeadFormData {
+  fullName: string;
+  age: string | number;
+  phone: string;
+  email: string;
+  city: string;
+  diabetesStatus: string;
+  diabetesType: string;
+  duration: string;
+  currentMedications: string;
+  mainConcern: string;
+  contactMethod: string;
+}
+
+export function getLeadConfirmationEmail(data: LeadFormData): string {
+  return EMAIL_WRAPPER(`
+    <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;">Thank You, ${esc(data.fullName)}!</h1>
+    <p style="font-size:16px;color:#555;margin:0 0 12px 0;line-height:1.6;">
+      We've received your free health assessment details. Our team will review
+      them and reach out via <strong style="color:#00647c;">${esc(data.contactMethod || "your preferred method")}</strong>
+      to explain the 3-month personalized diabetes-management program.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 28px 0;">
+      <tr>
+        <td align="center" style="padding:8px 4px;">
+          <a href="https://glymee.com/" style="display:inline-block;background-color:#00647c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;margin:0 6px 12px 6px;width:auto;">Book Free Consultation</a>
+          <a href="https://glymee.com/free-health-assessment" style="display:inline-block;background-color:#ffffff;color:#00647c;text-decoration:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;border:2px solid #00647c;margin:0 6px 12px 6px;width:auto;">Start Free Health Assessment</a>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9fb;border-radius:8px;padding:24px;margin-bottom:24px;">
+      <tr>
+        <td>
+          <h2 style="font-size:16px;font-weight:600;color:#00647c;margin:0 0 12px 0;">Your Assessment Summary</h2>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">
+            <tr><td style="padding:4px 0;color:#888;width:140px;">Full Name</td><td style="padding:4px 0;font-weight:500;">${esc(data.fullName)}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Age</td><td style="padding:4px 0;font-weight:500;">${esc(String(data.age))}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Email</td><td style="padding:4px 0;font-weight:500;">${esc(data.email)}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Phone</td><td style="padding:4px 0;font-weight:500;">${esc(data.phone)}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">City</td><td style="padding:4px 0;font-weight:500;">${esc(data.city)}</td></tr>
+            ${data.diabetesStatus ? `<tr><td style="padding:4px 0;color:#888;">Diabetes Status</td><td style="padding:4px 0;font-weight:500;">${esc(data.diabetesStatus)}</td></tr>` : ""}
+            ${data.diabetesType ? `<tr><td style="padding:4px 0;color:#888;">Diabetes Type</td><td style="padding:4px 0;font-weight:500;">${esc(data.diabetesType)}</td></tr>` : ""}
+            ${data.duration ? `<tr><td style="padding:4px 0;color:#888;">Time Since Diagnosis</td><td style="padding:4px 0;font-weight:500;">${esc(data.duration)}</td></tr>` : ""}
+            ${data.currentMedications ? `<tr><td style="padding:4px 0;color:#888;">Current Medications</td><td style="padding:4px 0;font-weight:500;">${esc(data.currentMedications)}</td></tr>` : ""}
+            ${data.mainConcern ? `<tr><td style="padding:4px 0;color:#888;vertical-align:top;">Main Concern</td><td style="padding:4px 0;font-weight:500;">${esc(data.mainConcern)}</td></tr>` : ""}
+            <tr><td style="padding:4px 0;color:#888;">Preferred Contact</td><td style="padding:4px 0;font-weight:500;">${esc(data.contactMethod || "N/A")}</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <p style="font-size:14px;color:#555;margin:0 0 16px 0;line-height:1.6;">
+      In the meantime, feel free to reply to this email or reach out to us on
+      WhatsApp if you have any questions.
+    </p>
+    <p style="font-size:14px;color:#555;margin:0;line-height:1.6;">
+      Best regards,<br/>
+      <strong style="color:#00647c;">The Glymee Team</strong>
+    </p>
+  `);
+}
+
+export function getLeadAdminNotificationEmail(data: LeadFormData): string {
+  return EMAIL_WRAPPER(`
+    <h1 style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;">New Health Assessment Lead</h1>
+    <p style="font-size:15px;color:#555;margin:0 0 24px 0;line-height:1.6;">
+      A new health assessment form has been submitted on the Glymee website.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9fb;border-radius:8px;padding:24px;margin-bottom:20px;">
+      <tr>
+        <td>
+          <h2 style="font-size:15px;font-weight:600;color:#00647c;margin:0 0 14px 0;border-bottom:1px solid #d0e8ee;padding-bottom:8px;">Contact Information</h2>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">
+            <tr><td style="padding:5px 0;color:#888;width:150px;">Full Name</td><td style="padding:5px 0;font-weight:500;">${esc(data.fullName)}</td></tr>
+            <tr><td style="padding:5px 0;color:#888;">Age</td><td style="padding:5px 0;font-weight:500;">${esc(String(data.age))}</td></tr>
+            <tr><td style="padding:5px 0;color:#888;">Phone</td><td style="padding:5px 0;font-weight:500;"><a href="tel:${esc(data.phone)}" style="color:#00647c;text-decoration:none;">${esc(data.phone)}</a></td></tr>
+            <tr><td style="padding:5px 0;color:#888;">Email</td><td style="padding:5px 0;font-weight:500;"><a href="mailto:${esc(data.email)}" style="color:#00647c;text-decoration:none;">${esc(data.email)}</a></td></tr>
+            <tr><td style="padding:5px 0;color:#888;">City</td><td style="padding:5px 0;font-weight:500;">${esc(data.city)}</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9fb;border-radius:8px;padding:24px;margin-bottom:20px;">
+      <tr>
+        <td>
+          <h2 style="font-size:15px;font-weight:600;color:#00647c;margin:0 0 14px 0;border-bottom:1px solid #d0e8ee;padding-bottom:8px;">Health Information</h2>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;">
+            ${data.diabetesStatus ? `<tr><td style="padding:5px 0;color:#888;width:150px;">Diabetes Status</td><td style="padding:5px 0;font-weight:500;">${esc(data.diabetesStatus)}</td></tr>` : ""}
+            ${data.diabetesType ? `<tr><td style="padding:5px 0;color:#888;">Diabetes Type</td><td style="padding:5px 0;font-weight:500;">${esc(data.diabetesType)}</td></tr>` : ""}
+            ${data.duration ? `<tr><td style="padding:5px 0;color:#888;">Time Since Diagnosis</td><td style="padding:5px 0;font-weight:500;">${esc(data.duration)}</td></tr>` : ""}
+            ${data.currentMedications ? `<tr><td style="padding:5px 0;color:#888;">Current Medications</td><td style="padding:5px 0;font-weight:500;">${esc(data.currentMedications)}</td></tr>` : ""}
+            ${data.mainConcern ? `<tr><td style="padding:5px 0;color:#888;vertical-align:top;">Main Concern</td><td style="padding:5px 0;font-weight:500;">${esc(data.mainConcern)}</td></tr>` : ""}
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding:8px 0 0 0;">
+          <a href="mailto:${esc(data.email)}?subject=Re:%20Your%20Glymee%20Health%20Assessment" style="display:inline-block;background-color:#00647c;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:600;">Reply to ${esc(data.fullName)}</a>
+        </td>
+      </tr>
+    </table>
+  `);
+}
+
 export function getOtpEmail(code: string): string {
   return EMAIL_WRAPPER(`
     <h1 style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;">Your Admin Login Code</h1>

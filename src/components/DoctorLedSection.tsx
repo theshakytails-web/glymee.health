@@ -15,24 +15,20 @@ export default function DoctorLedSection() {
             center of care.
           </p>
 
-          {/* Doctor placeholder card - details to be added */}
           <div className="bg-white rounded-2xl border border-outline-variant/30 shadow-sm p-6 md:p-7">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[32px]">person</span>
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[24px]">medical_services</span>
               </div>
               <div>
                 <h3 className="font-headline-md text-[18px] md:text-[20px] font-semibold text-on-background">
-                  Dr. [Name]
+                  Doctor-Led Guidance Throughout
                 </h3>
-                <p className="text-[14px] text-on-surface-variant font-label-md">
-                  MBBS · Clinical Care
-                </p>
               </div>
             </div>
             <p className="text-[14px] leading-[22px] text-on-surface-variant mt-4">
-              Doctor-led guidance throughout your program — reviewing your
-              patterns, progress and providing clinical oversight.
+              A qualified doctor reviews your patterns and progress and
+              provides clinical oversight throughout your program.
             </p>
           </div>
 
