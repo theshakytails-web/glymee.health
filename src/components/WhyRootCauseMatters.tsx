@@ -1,57 +1,93 @@
-const features = [
+const factors = [
   {
-    icon: "biotech",
-    iconColor: "text-primary",
-    title: "Precision Analysis",
-    description:
-      "We dive deep into your metabolic profile to find what specifically triggers your spikes.",
+    icon: "restaurant",
+    color: "text-primary",
+    title: "Food",
+    description: "What you eat and how much you eat.",
+  },
+  {
+    icon: "directions_run",
+    color: "text-secondary",
+    title: "Activity",
+    description: "Movement and exercise can affect glucose differently for different people.",
+  },
+  {
+    icon: "bedtime",
+    color: "text-tertiary",
+    title: "Sleep",
+    description: "Poor or irregular sleep can affect daily glucose patterns.",
   },
   {
     icon: "psychology_alt",
-    iconColor: "text-secondary",
-    title: "Behavioral Science",
-    description:
-      "Understand the psychological factors influencing your daily health choices and habits.",
+    color: "text-primary",
+    title: "Stress",
+    description: "Stress can influence glucose and everyday routines.",
   },
   {
-    icon: "settings_accessibility",
-    iconColor: "text-primary",
-    title: "Sustainable Shift",
-    description:
-      "Replace guesswork with data-backed lifestyle adjustments that stick for life.",
+    icon: "medication",
+    color: "text-error",
+    title: "Medication",
+    description: "Medication timing and treatment can influence glucose patterns.",
+  },
+  {
+    icon: "schedule",
+    color: "text-secondary",
+    title: "Meal Timing",
+    description: "When you eat can matter along with what you eat.",
+  },
+  {
+    icon: "event_repeat",
+    color: "text-tertiary",
+    title: "Daily Routine",
+    description: "Small changes in your routine can sometimes create noticeable changes in your glucose.",
   },
 ];
 
 export default function WhyRootCauseMatters() {
   return (
     <section className="py-16 md:py-24 px-4 sm:px-6 max-w-[1280px] mx-auto">
-      <div className="text-center mb-10 md:mb-16 max-w-3xl mx-auto space-y-3 md:space-y-4">
-        <h2 className="font-headline-lg text-[24px] sm:text-[28px] md:text-[32px] leading-[32px] sm:leading-[36px] md:leading-[40px] font-bold text-on-background">
-          Why Root Cause Matters
+      <div className="text-center mb-10 md:mb-14 max-w-3xl mx-auto space-y-3 md:space-y-4">
+        <h2 className="font-headline-lg text-[24px] sm:text-[28px] md:text-[34px] leading-[32px] sm:leading-[36px] md:leading-[42px] font-bold text-on-background">
+          Diabetes Is More Than a Number
         </h2>
         <p className="font-body-lg text-[16px] md:text-[18px] leading-[24px] md:leading-[28px] text-on-surface-variant">
-          Treating symptoms only gets you so far. By identifying the root causes
-          of glucose fluctuations—from stress to sleep to gut health—we create
-          lasting change.
+          Your glucose can change throughout the day — and food isn&apos;t the
+          only factor. Your daily glucose patterns can be influenced by:
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-        {features.map((feature) => (
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {factors.map((factor) => (
           <div
-            key={feature.title}
-            className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-outline-variant/30 hover:shadow-md transition-all"
+            key={factor.title}
+            className="bg-white p-5 md:p-6 rounded-xl border border-outline-variant/30 shadow-sm hover:shadow-md transition-all"
           >
             <span
-              className={`material-symbols-outlined ${feature.iconColor} text-3xl md:text-4xl mb-4 md:mb-6`}
+              className={`material-symbols-outlined ${factor.color} text-2xl md:text-3xl mb-3`}
             >
-              {feature.icon}
+              {factor.icon}
             </span>
-            <h3 className="font-headline-md text-[20px] md:text-[24px] leading-[28px] md:leading-[32px] font-semibold text-on-background mb-3 md:mb-4">
-              {feature.title}
+            <h3 className="font-headline-md text-[17px] md:text-[19px] leading-[24px] md:leading-[28px] font-semibold text-on-background mb-2">
+              {factor.title}
             </h3>
-            <p className="text-on-surface-variant">{feature.description}</p>
+            <p className="text-[14px] md:text-[15px] leading-[22px] text-on-surface-variant">
+              {factor.description}
+            </p>
           </div>
         ))}
+
+        {/* Closing card */}
+        <div className="bg-primary text-on-primary p-5 md:p-6 rounded-xl shadow-md flex flex-col justify-center">
+          <span className="material-symbols-outlined text-2xl md:text-3xl mb-3">
+            insights
+          </span>
+          <h3 className="font-headline-md text-[17px] md:text-[19px] leading-[24px] md:leading-[28px] font-semibold mb-2">
+            Glymee helps you connect these.
+          </h3>
+          <p className="text-[14px] md:text-[15px] leading-[22px] opacity-90">
+            We help connect these everyday factors with your glucose patterns.
+          </p>
+        </div>
       </div>
     </section>
   );

@@ -34,7 +34,7 @@ const jsonLd = {
         height: 512,
       },
       description:
-        "Glymee is a diabetes health management platform offering personalized consultations, CGM insights, and data-driven health plans.",
+        "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, personalized nutrition, lifestyle support and glucose insights.",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Pune",
@@ -44,6 +44,7 @@ const jsonLd = {
       contactPoint: {
         "@type": "ContactPoint",
         email: "help@glymee.com",
+        telephone: "+91 8452823804",
         contactType: "customer service",
       },
       sameAs: [
@@ -80,18 +81,17 @@ const jsonLd = {
       name: "Glymee Health",
       url: "https://glymee.com",
       description:
-        "Personalized diabetes care platform providing root-cause analysis, continuous glucose monitoring insights, and metabolic health management.",
-      medicalSpecialty: "Endocrinology",
+        "Personalized diabetes-management program providing doctor-led guidance, nutrition, lifestyle support and glucose insights.",
       availableService: [
         {
           "@type": "MedicalProcedure",
-          name: "Diabetes Consultation",
-          description: "Personalized diabetes consultation with root-cause analysis",
+          name: "3-Month Personalized Diabetes Management Program",
+          description: "A doctor-led 3-month program combining health assessment, personalized nutrition, lifestyle management and glucose insights.",
         },
         {
           "@type": "MedicalProcedure",
-          name: "CGM Monitoring",
-          description: "Continuous glucose monitoring setup and analysis",
+          name: "Glucose Monitoring",
+          description: "CGM-based glucose pattern analysis used within the program when appropriate",
         },
       ],
     },
@@ -101,26 +101,21 @@ const jsonLd = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://glymee.com"),
   title: {
-    default: "Glymee | Diabetes Health Management Platform",
+    default: "Glymee Health | Personalized Diabetes Management Program",
     template: "%s | Glymee",
   },
   description:
-    "Glymee helps you understand the root cause of your diabetes. Personalized consultations, continuous glucose monitoring insights, and data-driven health plans for a sustainable, healthy future.",
+    "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, personalized nutrition, lifestyle support and glucose insights to help you understand and manage your diabetes.",
   keywords: [
-    "diabetes management",
-    "diabetes consultation",
-    "blood sugar monitoring",
-    "CGM",
-    "continuous glucose monitoring",
-    "diabetes health platform",
-    "diabetes care India",
-    "type 2 diabetes",
-    "type 1 diabetes",
-    "glycemic control",
-    "diabetes doctor Pune",
-    "diabetes reversal",
-    "metabolic health",
-    "HbA1c tracking",
+    "diabetes management program",
+    "personalized diabetes care",
+    "diabetes management India",
+    "CGM diabetes management",
+    "Type 2 diabetes management",
+    "prediabetes management",
+    "personalized nutrition for diabetes",
+    "glucose monitoring",
+    "lifestyle management for diabetes",
     "Glymee",
   ],
   authors: [{ name: "Glymee Health" }],
@@ -131,23 +126,23 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: "https://glymee.com",
     siteName: "Glymee",
-    title: "Glymee | Manage Today. Healthy Tomorrow.",
+    title: "Glymee Health | Personalized Diabetes Management Program",
     description:
-      "Stop guessing, start understanding your diabetes. Personalized consultations and data-driven insights for a sustainable, healthy future.",
+      "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, personalized nutrition, lifestyle support and glucose insights.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Glymee - Diabetes Health Management Platform",
+        alt: "Glymee Health - Personalized Diabetes Management Program",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Glymee | Manage Today. Healthy Tomorrow.",
+    title: "Glymee Health | Personalized Diabetes Management Program",
     description:
-      "Stop guessing, start understanding your diabetes. Personalized consultations and data-driven insights.",
+      "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, personalized nutrition, lifestyle support and glucose insights.",
     images: ["/og-image.png"],
   },
   robots: {

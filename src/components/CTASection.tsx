@@ -1,5 +1,5 @@
 import Link from "next/link";
-import BookButton from "./BookButton";
+import WhatsAppButton from "./WhatsAppButton";
 
 export default function CTASection() {
   return (
@@ -7,26 +7,26 @@ export default function CTASection() {
       <div className="bg-primary rounded-3xl p-8 md:p-10 lg:p-12 text-center text-on-primary relative overflow-hidden">
         <div className="relative z-10 max-w-2xl mx-auto space-y-5 md:space-y-6">
           <h2 className="font-headline-lg text-[24px] sm:text-[28px] md:text-[36px] leading-[32px] sm:leading-[36px] md:leading-[44px] tracking-[-0.01em] font-bold">
-            Start Your Journey Today
+            Understand Your Numbers. Change What Matters.
           </h2>
           <p className="font-body-md text-[15px] md:text-[16px] leading-[22px] md:leading-[24px] opacity-90">
-            Ready to uncover the &ldquo;why&rdquo; behind your blood sugar?
-            Take our free health assessment or book a discovery session.
+            Your diabetes is personal. Your care should be personal too. Start
+            your Glymee journey with a free health assessment.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link
-              href="/assess"
-              className="bg-white text-primary px-6 sm:px-10 py-3 md:py-4 rounded-lg font-headline-md text-[16px] md:text-[20px] leading-[24px] md:leading-[28px] font-semibold hover:bg-opacity-90 transition-all w-full sm:w-auto"
+              href="/free-health-assessment"
+              className="bg-white text-primary px-6 sm:px-10 py-3 md:py-4 rounded-lg font-headline-md text-[16px] md:text-[20px] leading-[24px] md:leading-[28px] font-semibold hover:opacity-90 transition-all w-full sm:w-auto"
             >
-              Take Free Assessment
+              Start Your Free Health Assessment
             </Link>
-            <BookButton variant="white" className="w-full sm:w-auto" />
-            <button className="bg-primary-container text-white px-6 sm:px-10 py-3 md:py-4 rounded-lg font-headline-md text-[16px] md:text-[20px] leading-[24px] md:leading-[28px] font-semibold hover:bg-opacity-90 transition-all border border-white/20 w-full sm:w-auto">
-              View Pricing
-            </button>
+            <WhatsAppButton
+              label="Talk to Glymee"
+              className="border border-white/40 text-white px-6 sm:px-10 py-3 md:py-4 rounded-lg font-headline-md text-[16px] md:text-[20px] leading-[24px] md:leading-[28px] font-semibold w-full sm:w-auto"
+            />
           </div>
-          <p className="font-label-sm text-[12px] leading-[16px] tracking-[0.05em] font-semibold opacity-70">
-            No long-term contracts. Scientific approach. Real human support.
+          <p className="font-label-sm text-[12px] leading-[16px] tracking-[0.05em] font-semibold opacity-80">
+            3-Month Personalized Diabetes Management Program
           </p>
         </div>
       </div>
