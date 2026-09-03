@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import WhatsAppButton from "./WhatsAppButton";
+import { useConsultation } from "@/context/ConsultationContext";
 
 export default function HeroSection() {
+  const { open } = useConsultation();
   return (
     <section
       id="home"
@@ -37,6 +39,13 @@ export default function HeroSection() {
             >
               Start Your Free Health Assessment
             </Link>
+            <button
+              type="button"
+              onClick={open}
+              className="w-full sm:w-auto px-8 py-4 rounded-lg bg-white border border-primary/30 text-primary font-semibold text-center hover:bg-primary/5 transition-colors"
+            >
+              Book Free Consultation
+            </button>
             <WhatsAppButton
               className="w-full sm:w-auto px-8 py-4 rounded-lg border-2 border-primary/30 text-primary font-semibold"
               label="Talk to Glymee"
