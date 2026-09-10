@@ -29,7 +29,7 @@ const jsonLd = {
       url: "https://glymee.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://glymee.com/icon-512.png",
+        url: "/icon-512.png",
         width: 512,
         height: 512,
       },
