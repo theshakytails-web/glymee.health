@@ -56,7 +56,7 @@ export default function HeroSection() {
           <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-primary-fixed/20 rounded-full blur-3xl" />
           <div className="relative glass-card p-3 sm:p-4 rounded-xl shadow-2xl">
             <Image
-              src="/glymee_dashboard.webp"
+              src="/glymee_dashboard.png"
               alt="Glymee personalized diabetes-management insights"
               width={600}
               height={450}

@@ -57,6 +57,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|glymee-mark.png|glymee_dashboard.webp|Glymee_logo_1.png|dashboard-preview.svg|robots.txt|sitemap.xml).*)",
+    "/((?!_next/static|_next/image|favicon.ico|glymee-mark.png|glymee_dashboard.png|Glymee_logo_1.png|dashboard-preview.svg|robots.txt|sitemap.xml).*)",
   ],
 };
