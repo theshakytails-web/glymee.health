@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { Manrope, Inter } from "next/font/google";
+import {
+  Manrope,
+  Inter,
+  Atkinson_Hyperlegible_Next,
+} from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ConsultationProvider } from "@/context/ConsultationContext";
-import ConsultationModal from "@/components/ConsultationModal";
+import ConsultationModal from "@/components/ConsultationModalLoader";
 import { faqs } from "@/lib/faqs";
 import "./globals.css";
 
@@ -17,6 +21,13 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const atkinson = Atkinson_Hyperlegible_Next({
+  variable: "--font-atkinson",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  adjustFontFallback: false,
 });
 
 const jsonLd = {
@@ -177,7 +188,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${inter.variable} scroll-smooth`}
+      className={`${manrope.variable} ${inter.variable} ${atkinson.variable} scroll-smooth`}
     >
       <head>
         <script
@@ -187,12 +198,14 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
-          rel="stylesheet"
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
           rel="stylesheet"
         />
       </head>
