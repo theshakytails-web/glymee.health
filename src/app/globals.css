@@ -71,8 +71,8 @@
   --font-headline-lg: "Manrope", sans-serif;
   --font-headline-lg-mobile: "Manrope", sans-serif;
   --font-headline-md: "Manrope", sans-serif;
-  --font-body-lg: var(--font-atkinson), sans-serif;
-  --font-body-md: var(--font-atkinson), sans-serif;
+  --font-body-lg: "Atkinson Hyperlegible Next", sans-serif;
+  --font-body-md: "Atkinson Hyperlegible Next", sans-serif;
   --font-label-md: "Inter", sans-serif;
   --font-label-sm: "Inter", sans-serif;
 
