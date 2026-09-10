@@ -38,28 +38,24 @@ export function wrapLines(doc: jsPDF, text: string, width: number, max: number):
   return lines.slice(0, max).map(String);
 }
 
-/** Branded white header: Glymee logo + tagline on left, business block on right, divider beneath. */
+/** Branded white header: Glymee logo mark + name on left, contact block on right, divider beneath. */
 export function brandHeader(doc: jsPDF, business: BusinessInfo) {
   try {
-    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN, 11, 44, 11.9);
+    doc.addImage(loadPngDataUrl("Glymee_logo_1.png"), "PNG", MARGIN, 10.5, 12.4, 11.8);
+    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN + 15.5, 11, 42, 11.3);
   } catch {
-    /* name image optional */
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(...TEAL);
+    doc.text("GLYMEE HEALTH", MARGIN, 20);
   }
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...MUTED);
-  doc.text(business.tagline || "Manage Today · Healthy Tomorrow", MARGIN, 28.5);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...INK);
-  doc.text(business.name, PAGE_W - MARGIN, 15, { align: "right" });
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  doc.text(`Phone: ${business.phone}`, PAGE_W - MARGIN, 21, { align: "right" });
-  doc.text(`Email: ${business.email}`, PAGE_W - MARGIN, 26.5, { align: "right" });
-  doc.text(`Website: ${business.website}`, PAGE_W - MARGIN, 32, { align: "right" });
+  doc.text(`Phone: ${business.phone}`, PAGE_W - MARGIN, 15, { align: "right" });
+  doc.text(`Email: ${business.email}`, PAGE_W - MARGIN, 21.5, { align: "right" });
+  doc.text(business.website, PAGE_W - MARGIN, 28, { align: "right" });
 
   doc.setDrawColor(210, 210, 210);
   doc.setLineWidth(0.3);

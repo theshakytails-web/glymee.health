@@ -4,16 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import ReportsTabs from "@/components/admin/ReportsTabs";
+import { parseCgmCsv, type CgmParseResult } from "@/lib/cgms-csv";
 
 interface PatientOption {
   id: string;
   fullName: string;
   email: string;
-}
-
-interface HourlyRow {
-  time: string;
-  avg: string;
 }
 
 interface ReportRecord {
@@ -29,14 +25,6 @@ const inputClass =
 const textareaClass =
   "w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-y";
 const labelClass = "block text-xs text-on-surface-variant mb-1";
-
-const initialHourlyRows: HourlyRow[] = [
-  { time: "12:00", avg: "" },
-  { time: "13:00", avg: "" },
-  { time: "14:00", avg: "" },
-  { time: "15:00", avg: "" },
-  { time: "16:00", avg: "" },
-];
 
 export default function CgmsReportPage() {
   const router = useRouter();
@@ -56,6 +44,9 @@ export default function CgmsReportPage() {
   const [cv, setCv] = useState("");
   const [lowest, setLowest] = useState("");
   const [highest, setHighest] = useState("");
+  const [dataCoverage, setDataCoverage] = useState("");
+  const [csvSummary, setCsvSummary] = useState<CgmParseResult | null>(null);
+  const [csvError, setCsvError] = useState("");
 
   const [score, setScore] = useState("");
   const [interpretation, setInterpretation] = useState("");
@@ -63,7 +54,6 @@ export default function CgmsReportPage() {
 
   const [morningPattern, setMorningPattern] = useState("");
   const [morningObservation, setMorningObservation] = useState("");
-  const [afternoonHourly, setAfternoonHourly] = useState<HourlyRow[]>(initialHourlyRows);
   const [afternoonObservation, setAfternoonObservation] = useState("");
   const [nightPattern, setNightPattern] = useState("");
   const [nightObservation, setNightObservation] = useState("");
@@ -126,18 +116,34 @@ export default function CgmsReportPage() {
     setPatientName(p ? p.fullName : "");
   }
 
-  function setHourlyRow(index: number, field: keyof HourlyRow, value: string) {
-    setAfternoonHourly((prev) =>
-      prev.map((r, i) => (i === index ? { ...r, [field]: value } : r))
-    );
-  }
-
-  function addHourlyRow() {
-    setAfternoonHourly((prev) => [...prev, { time: "", avg: "" }]);
-  }
-
-  function removeHourlyRow(index: number) {
-    setAfternoonHourly((prev) => prev.filter((_, i) => i !== index));
+  function handleCsvUpload(file: File) {
+    setCsvError("");
+    setCsvSummary(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const result = parseCgmCsv((reader.result as string) || "", file.name);
+        setCsvSummary(result);
+        setPeriod(result.period);
+        setDuration(result.duration);
+        setAvgGlucose(result.metrics.avgGlucose);
+        setGmi(result.metrics.gmi);
+        setTir(result.metrics.tir);
+        setTar(result.metrics.tar);
+        setTbr(result.metrics.tbr);
+        setCv(result.metrics.cv);
+        setLowest(result.metrics.lowest);
+        setHighest(result.metrics.highest);
+        setDataCoverage(`${result.coverage}`);
+      } catch (err) {
+        setCsvError(
+          err instanceof Error ? err.message : "Could not parse the CSV file."
+        );
+      }
+    };
+    reader.onerror = () =>
+      setCsvError("Could not read the file. Please try again.");
+    reader.readAsText(file);
   }
 
   async function handleSave() {
@@ -151,12 +157,21 @@ export default function CgmsReportPage() {
     try {
       const reportData = {
         clinicalBackground,
-        glucoseOverview: { avgGlucose, gmi, tir, tar, tbr, cv, lowest, highest },
+        glucoseOverview: {
+          avgGlucose,
+          gmi,
+          tir,
+          tar,
+          tbr,
+          cv,
+          lowest,
+          highest,
+          dataCoverage,
+        },
         healthScore: { score, interpretation, commentary },
         patternAnalysis: {
           morningPattern,
           morningObservation,
-          afternoonHourly: afternoonHourly.filter((h) => h.time || h.avg),
           afternoonObservation,
           nightPattern,
           nightObservation,
@@ -270,6 +285,56 @@ export default function CgmsReportPage() {
             </div>
 
             <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
+              <h2 className="font-headline-md text-base font-semibold text-on-surface mb-2">
+                Upload CGM Data (CSV)
+              </h2>
+              <p className="text-xs text-on-surface-variant mb-4">
+                Upload a CSV with a timestamp and glucose column (mg/dL). Once parsed, glucose
+                metrics below are auto-filled and can still be edited manually.
+              </p>
+              <input
+                type="file"
+                accept=".csv,text/csv,.txt"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleCsvUpload(f);
+                }}
+                className="text-sm text-on-surface-variant file:mr-4 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:text-sm file:font-medium hover:file:bg-primary/20 cursor-pointer"
+              />
+              {csvError && (
+                <div className="mt-3 bg-error/10 text-error px-4 py-3 rounded-lg text-sm font-medium">
+                  {csvError}
+                </div>
+              )}
+              {csvSummary && (
+                <div className="mt-3 border border-outline-variant/20 rounded-lg p-4">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                    <span className="text-on-surface font-medium">{csvSummary.fileName}</span>
+                    <span className="text-on-surface-variant">{csvSummary.validCount} readings</span>
+                    {csvSummary.startDate && (
+                      <span className="text-on-surface-variant">
+                        {csvSummary.startDate} → {csvSummary.endDate} ({csvSummary.duration})
+                      </span>
+                    )}
+                    <span className="text-on-surface-variant">Coverage {csvSummary.coverage}%</span>
+                  </div>
+                  {(csvSummary.duplicates > 0 || csvSummary.invalid > 0) && (
+                    <div className="mt-2 text-xs text-on-surface-variant">
+                      Skipped {csvSummary.duplicates} duplicate and {csvSummary.invalid} invalid
+                      readings.
+                    </div>
+                  )}
+                  {csvSummary.hasGaps && (
+                    <div className="mt-2 bg-error/10 text-error px-3 py-2 rounded-lg text-xs font-medium">
+                      CGM data contains gaps (max {csvSummary.maxGapMinutes} min between readings).
+                      Review the dataset before interpreting the report.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-surface rounded-xl border border-outline-variant/10 p-6">
               <h2 className="font-headline-md text-base font-semibold text-on-surface mb-4">
                 B. Clinical Background
               </h2>
@@ -319,6 +384,10 @@ export default function CgmsReportPage() {
                   <label className={labelClass}>Highest Glucose (mg/dL)</label>
                   <input type="text" value={highest} onChange={(e) => setHighest(e.target.value)} placeholder="e.g. 248" className={inputClass} />
                 </div>
+                <div>
+                  <label className={labelClass}>Data Coverage (%)</label>
+                  <input type="text" value={dataCoverage} onChange={(e) => setDataCoverage(e.target.value)} placeholder="e.g. 98" className={inputClass} />
+                </div>
               </div>
             </div>
 
@@ -356,44 +425,6 @@ export default function CgmsReportPage() {
                     <label className={labelClass}>Morning Observation</label>
                     <textarea rows={3} value={morningObservation} onChange={(e) => setMorningObservation(e.target.value)} placeholder="Observations for morning..." className={textareaClass} />
                   </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Afternoon Hourly Averages</label>
-                  <div className="space-y-2 mt-1">
-                    {afternoonHourly.map((row, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={row.time}
-                          onChange={(e) => setHourlyRow(i, "time", e.target.value)}
-                          placeholder="Time"
-                          className={`${inputClass} w-24`}
-                        />
-                        <input
-                          type="text"
-                          value={row.avg}
-                          onChange={(e) => setHourlyRow(i, "avg", e.target.value)}
-                          placeholder="Avg mg/dL"
-                          className={`${inputClass} flex-1`}
-                        />
-                        <button
-                          onClick={() => removeHourlyRow(i)}
-                          className="text-on-surface-variant hover:text-error transition-colors"
-                          title="Remove"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={addHourlyRow}
-                    className="mt-2 text-sm text-primary hover:underline flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
-                    Add hour
-                  </button>
                 </div>
 
                 <div>

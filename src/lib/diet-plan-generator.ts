@@ -26,6 +26,7 @@ export interface DietMeal {
   carbs: string;
   fiber: string;
   fat: string;
+  notes: string;
 }
 
 export interface DietPlanData {
@@ -135,6 +136,20 @@ export async function generateDietPlanPdf(
     for (const line of macroLines) {
       doc.text(line, MARGIN, y);
       y += 3.8;
+    }
+    if (meal.notes) {
+      y = ensure(doc, y, 12);
+      const noteLines = doc.splitTextToSize(
+        `Notes: ${meal.notes}`,
+        CONTENT_W
+      ) as string[];
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...MUTED);
+      for (const line of noteLines) {
+        doc.text(line, MARGIN, y);
+        y += 3.8;
+      }
     }
     y += 2;
   });
