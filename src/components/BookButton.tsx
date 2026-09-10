@@ -1,6 +1,6 @@
 "use client";
 
-import { useConsultation } from "@/context/ConsultationContext";
+import Link from "next/link";
 
 interface BookButtonProps {
   variant?: "primary" | "secondary" | "white" | "outline";
@@ -11,8 +11,6 @@ export default function BookButton({
   variant = "primary",
   className = "",
 }: BookButtonProps) {
-  const { open } = useConsultation();
-
   const baseStyles =
     "font-label-md text-[14px] leading-[20px] tracking-[0.01em] hover:opacity-80 transition-all active:scale-95 cursor-pointer";
 
@@ -26,11 +24,11 @@ export default function BookButton({
   };
 
   return (
-    <button
-      onClick={open}
+    <Link
+      href="/book-consultation"
       className={`${baseStyles} ${variantStyles[variant]} ${className}`}
     >
       Book Consultation
-    </button>
+    </Link>
   );
 }
