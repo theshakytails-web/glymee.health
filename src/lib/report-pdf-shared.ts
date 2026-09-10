@@ -41,8 +41,8 @@ export function wrapLines(doc: jsPDF, text: string, width: number, max: number):
 /** Branded white header: Glymee logo mark + name on left, contact block on right, divider beneath. */
 export function brandHeader(doc: jsPDF, business: BusinessInfo) {
   try {
-    doc.addImage(loadPngDataUrl("glymee-mark.png"), "PNG", MARGIN, 10.5, 12.4, 11.8);
-    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN + 14.5, 11, 40, 10.7);
+    doc.addImage(loadPngDataUrl("glymee-mark.png"), "PNG", MARGIN, 10.5, 13.5, 12.8);
+    doc.addImage(loadPngDataUrl("Glymee_name.png"), "PNG", MARGIN + 15.5, 10.5, 48.3, 13);
   } catch {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
