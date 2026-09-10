@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import ReportsTabs from "@/components/admin/ReportsTabs";
 
 interface Patient {
   id: string;
@@ -513,6 +514,7 @@ export default function ClinicalReportPage() {
       <AdminSidebar />
       <main className="md:ml-64 p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
+          <ReportsTabs />
           <div className="flex items-center justify-between mb-6 no-print">
             <h1 className="font-headline-md text-2xl font-bold text-on-surface">Clinical Assessment Report</h1>
             <div className="flex gap-2">

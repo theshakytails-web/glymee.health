@@ -182,6 +182,29 @@ export const settings = sqliteTable("settings", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
+export const cgmsReports = sqliteTable("cgms_reports", {
+  id: text("id").primaryKey(),
+  patientId: text("patient_id").notNull().references(() => patients.id),
+  patientName: text("patient_name").notNull(),
+  period: text("period"),
+  duration: text("duration"),
+  reportData: text("report_data").notNull().default("{}"),
+  createdAt: text("created_at").notNull(),
+  createdBy: text("created_by"),
+  pdfGeneratedAt: text("pdf_generated_at"),
+});
+
+export const dietPlans = sqliteTable("diet_plans", {
+  id: text("id").primaryKey(),
+  patientId: text("patient_id").notNull().references(() => patients.id),
+  patientName: text("patient_name").notNull(),
+  planName: text("plan_name"),
+  planData: text("plan_data").notNull().default("{}"),
+  createdAt: text("created_at").notNull(),
+  createdBy: text("created_by"),
+  pdfGeneratedAt: text("pdf_generated_at"),
+});
+
 export const otpCodes = sqliteTable("otp_codes", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
