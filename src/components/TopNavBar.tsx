@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import WhatsAppButton from "./WhatsAppButton";
-import { useConsultation } from "@/context/ConsultationContext";
 
 const navLinks = [
   { label: "Home", href: "#home" },
@@ -17,7 +16,6 @@ const navLinks = [
 
 export default function TopNavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { open } = useConsultation();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center h-16 px-6 bg-surface/80 backdrop-blur-md shadow-sm">
@@ -57,13 +55,12 @@ export default function TopNavBar() {
       </button>
 
       <div className="hidden lg:flex items-center gap-3">
-        <button
-          type="button"
-          onClick={open}
+        <Link
+          href="/book-consultation"
           className="bg-white border border-primary/30 text-primary px-5 py-2.5 rounded-lg font-label-md text-[14px] leading-[20px] tracking-[0.01em] hover:bg-primary/5 transition-all active:scale-95 whitespace-nowrap"
         >
           Book Free Consultation
-        </button>
+        </Link>
         <Link
           href="/free-health-assessment"
           className="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-label-md text-[14px] leading-[20px] tracking-[0.01em] hover:opacity-90 transition-all active:scale-95 whitespace-nowrap"
@@ -86,16 +83,13 @@ export default function TopNavBar() {
                 {link.label}
               </a>
             ))}
-            <button
-              type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                open();
-              }}
+            <Link
+              href="/book-consultation"
+              onClick={() => setMobileOpen(false)}
               className="mt-1 w-full bg-white border border-primary/30 text-primary px-5 py-3 rounded-lg font-label-md text-[14px] text-center hover:bg-primary/5 transition-all"
             >
               Book Free Consultation
-            </button>
+            </Link>
             <Link
               href="/free-health-assessment"
               className="mt-1 w-full bg-primary text-on-primary px-5 py-3 rounded-lg font-label-md text-[14px] text-center hover:opacity-90 transition-all"

@@ -6,8 +6,6 @@ import {
 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { ConsultationProvider } from "@/context/ConsultationContext";
-import ConsultationModal from "@/components/ConsultationModalLoader";
 import { faqs } from "@/lib/faqs";
 import "./globals.css";
 
@@ -210,10 +208,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-on-background font-body-md antialiased">
-        <ConsultationProvider>
-          {children}
-          <ConsultationModal />
-        </ConsultationProvider>
+        {children}
         <Analytics />
         <SpeedInsights />
       </body>
