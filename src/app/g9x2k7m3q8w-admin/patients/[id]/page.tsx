@@ -195,6 +195,22 @@ export default function PatientDetailPage({
                   Create Invoice
                 </button>
                 <button
+                  onClick={() =>
+                    router.push(`/g9x2k7m3q8w-admin/reports/cgms?patientId=${id}`)
+                  }
+                  className="px-4 py-2 text-sm bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors"
+                >
+                  CGMS Report
+                </button>
+                <button
+                  onClick={() =>
+                    router.push(`/g9x2k7m3q8w-admin/reports/diet?patientId=${id}`)
+                  }
+                  className="px-4 py-2 text-sm bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors"
+                >
+                  Diet Plan
+                </button>
+                <button
                   onClick={() => setEditing(true)}
                   className="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
                 >
