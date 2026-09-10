@@ -20,6 +20,7 @@ interface MealRow {
   carbs: string;
   fiber: string;
   fat: string;
+  notes: string;
 }
 
 interface DietPlanRecord {
@@ -31,11 +32,11 @@ interface DietPlanRecord {
 }
 
 const DEFAULT_MEALS: MealRow[] = [
-  { name: "Breakfast", timing: "7:30 – 8:30 AM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "" },
-  { name: "Mid-Morning Snack", timing: "10:30 – 11:00 AM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "" },
-  { name: "Lunch", timing: "1:00 – 2:00 PM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "" },
-  { name: "Evening Snack", timing: "5:00 – 5:30 PM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "" },
-  { name: "Dinner", timing: "8:00 – 9:00 PM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "" },
+  { name: "Breakfast", timing: "7:30 – 8:30 AM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "", notes: "" },
+  { name: "Mid-Morning Snack", timing: "10:30 – 11:00 AM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "", notes: "" },
+  { name: "Lunch", timing: "1:00 – 2:00 PM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "", notes: "" },
+  { name: "Evening Snack", timing: "5:00 – 5:30 PM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "", notes: "" },
+  { name: "Dinner", timing: "8:00 – 9:00 PM", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "", notes: "" },
 ];
 
 const inputClass =
@@ -103,7 +104,7 @@ export default function DietPlanPage() {
   }
 
   function addMeal() {
-    setMeals((prev) => [...prev, { name: "", timing: "", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "" }]);
+    setMeals((prev) => [...prev, { name: "", timing: "", meal: "", calories: "", protein: "", carbs: "", fiber: "", fat: "", notes: "" }]);
   }
 
   function removeMeal(index: number) {
@@ -365,6 +366,16 @@ export default function DietPlanPage() {
                           />
                         </div>
                       ))}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-on-surface-variant mb-1">Notes</label>
+                      <textarea
+                        value={m.notes}
+                        onChange={(e) => updateMeal(i, "notes", e.target.value)}
+                        rows={2}
+                        placeholder="Portion guidance or notes for this meal..."
+                        className={inputSmall}
+                      />
                     </div>
                   </div>
                 ))}

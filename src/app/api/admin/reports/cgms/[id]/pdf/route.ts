@@ -42,11 +42,11 @@ export async function GET(
     duration: report.duration || "",
     clinicalBackground: rd.clinicalBackground || "",
     glucoseOverview: rd.glucoseOverview || {
-      avgGlucose: "", gmi: "", tir: "", tar: "", tbr: "", cv: "", lowest: "", highest: "",
+      avgGlucose: "", gmi: "", tir: "", tar: "", tbr: "", cv: "", lowest: "", highest: "", dataCoverage: "",
     },
     healthScore: rd.healthScore || { score: "", interpretation: "", commentary: "" },
     patternAnalysis: rd.patternAnalysis || {
-      morningPattern: "", morningObservation: "", afternoonHourly: [],
+      morningPattern: "", morningObservation: "",
       afternoonObservation: "", nightPattern: "", nightObservation: "",
     },
     dawnPhenomenon: rd.dawnPhenomenon || "",

@@ -31,12 +31,12 @@ export interface CgmsReportData {
     cv: string;
     lowest: string;
     highest: string;
+    dataCoverage: string;
   };
   healthScore: { score: string; interpretation: string; commentary: string };
   patternAnalysis: {
     morningPattern: string;
     morningObservation: string;
-    afternoonHourly: Array<{ time: string; avg: string }>;
     afternoonObservation: string;
     nightPattern: string;
     nightObservation: string;
@@ -127,13 +127,14 @@ export async function generateCgmsReportPdf(
     head: [["Metric", "Value"]],
     body: [
       ["Average Glucose", `${ov.avgGlucose} mg/dL`],
-      ["Estimated HbA1c (GMI)", `${ov.gmi}%`],
+      ["GMI (CGM-derived estimate)", `${ov.gmi}%`],
       ["Time in Range", `${ov.tir}%`],
       ["Time Above Range", `${ov.tar}%`],
       ["Time Below Range", `${ov.tbr}%`],
       ["Glucose Variability (CV)", `${ov.cv}%`],
       ["Lowest Glucose", `${ov.lowest} mg/dL`],
       ["Highest Glucose", `${ov.highest} mg/dL`],
+      ...(ov.dataCoverage ? [["Data Coverage", `${ov.dataCoverage}%`]] : []),
     ],
   });
   y = (doc as any).lastAutoTable.finalY + 7;
@@ -151,22 +152,9 @@ export async function generateCgmsReportPdf(
   y = paragraph(doc, data.patternAnalysis.morningObservation, y);
 
   y = subheading(doc, "2. Afternoon", y);
-  if (data.patternAnalysis.afternoonHourly.length > 0) {
-    y = ensure(doc, y, 30);
-    autoTable(doc, {
-      startY: y,
-      margin: { left: MARGIN, right: MARGIN },
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: TEAL, textColor: 255 },
-      theme: "grid",
-      head: [["Time", "Avg (mg/dL)"]],
-      body: data.patternAnalysis.afternoonHourly.map((h) => [h.time, h.avg]),
-    });
-    y = (doc as any).lastAutoTable.finalY + 7;
-  }
   y = paragraph(doc, data.patternAnalysis.afternoonObservation, y);
 
-  y = subheading(doc, "3. Night", y);
+  y = subheading(doc, "3. Evening / Night", y);
   y = paragraph(doc, data.patternAnalysis.nightPattern, y);
   y = paragraph(doc, data.patternAnalysis.nightObservation, y);
 

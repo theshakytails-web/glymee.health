@@ -19,6 +19,16 @@ const tabs = [
     href: "/g9x2k7m3q8w-admin/reports/diet",
     icon: "restaurant_menu",
   },
+  {
+    label: "Report History",
+    href: "/g9x2k7m3q8w-admin/reports/history",
+    icon: "history",
+  },
+  {
+    label: "Diet Plan History",
+    href: "/g9x2k7m3q8w-admin/reports/diet-history",
+    icon: "history",
+  },
 ];
 
 export default function ReportsTabs() {
