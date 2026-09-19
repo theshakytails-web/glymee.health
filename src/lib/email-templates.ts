@@ -40,7 +40,7 @@ const EMAIL_WRAPPER = (content: string) => `
                     <p style="font-size:12px;color:#888;margin:0;">Pune, Maharashtra, India &bull; <a href="mailto:help@glymee.com" style="color:#00647c;text-decoration:none;">help@glymee.com</a></p>
                   </td>
                   <td align="right">
-                    <a href="https://glymee.com/privacy" style="font-size:12px;color:#00647c;text-decoration:none;">Privacy Policy</a>
+                    <a href="https://www.glymee.com/privacy" style="font-size:12px;color:#00647c;text-decoration:none;">Privacy Policy</a>
                   </td>
                 </tr>
               </table>

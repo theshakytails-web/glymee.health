@@ -21,13 +21,13 @@ export const metadata: Metadata = {
   description:
     "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, nutrition, lifestyle support and glucose insights to help you understand and manage your diabetes.",
   alternates: {
-    canonical: "https://glymee.com",
+    canonical: "https://www.glymee.com/",
   },
   openGraph: {
     title: "Glymee Health | Personalized Diabetes Management Program",
     description:
       "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, nutrition, lifestyle support and glucose insights to help you understand and manage your diabetes.",
-    url: "https://glymee.com",
+    url: "https://www.glymee.com/",
     images: [
       {
         url: "/og-image.png",

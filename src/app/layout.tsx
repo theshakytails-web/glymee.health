@@ -22,12 +22,13 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://glymee.com/#organization",
+      "@id": "https://www.glymee.com/#organization",
       name: "Glymee Health",
-      url: "https://glymee.com",
+      alternateName: "Glymee",
+      url: "https://www.glymee.com",
       logo: {
         "@type": "ImageObject",
-        url: "/icon-512.png",
+        url: "https://www.glymee.com/icon-512.png",
         width: 512,
         height: 512,
       },
@@ -52,21 +53,21 @@ const jsonLd = {
     },
     {
       "@type": "WebSite",
-      "@id": "https://glymee.com/#website",
-      url: "https://glymee.com",
+      "@id": "https://www.glymee.com/#website",
+      url: "https://www.glymee.com",
       name: "Glymee",
       description:
         "Diabetes Health Management Platform - Manage Today. Healthy Tomorrow.",
-      publisher: { "@id": "https://glymee.com/#organization" },
+      publisher: { "@id": "https://www.glymee.com/#organization" },
       potentialAction: {
         "@type": "SearchAction",
-        target: "https://glymee.com/?q={search_term_string}",
+        target: "https://www.glymee.com/?q={search_term_string}",
         "query-input": "required name=search_term_string",
       },
     },
     {
       "@type": "FAQPage",
-      "@id": "https://glymee.com/#faq",
+      "@id": "https://www.glymee.com/#faq",
       mainEntity: faqs.map((f) => ({
         "@type": "Question",
         name: f.question,
@@ -75,9 +76,9 @@ const jsonLd = {
     },
     {
       "@type": "MedicalOrganization",
-      "@id": "https://glymee.com/#medicalorg",
+      "@id": "https://www.glymee.com/#medicalorg",
       name: "Glymee Health",
-      url: "https://glymee.com",
+      url: "https://www.glymee.com",
       description:
         "Personalized diabetes-management program providing doctor-led guidance, nutrition, lifestyle support and glucose insights.",
       availableService: [
@@ -97,7 +98,7 @@ const jsonLd = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://glymee.com"),
+  metadataBase: new URL("https://www.glymee.com"),
   title: {
     default: "Glymee Health | Personalized Diabetes Management Program",
     template: "%s | Glymee",
@@ -122,8 +123,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://glymee.com",
-    siteName: "Glymee",
+    url: "https://www.glymee.com/",
+    siteName: "Glymee Health",
     title: "Glymee Health | Personalized Diabetes Management Program",
     description:
       "Glymee is a 3-month personalized diabetes-management program combining doctor-led guidance, personalized nutrition, lifestyle support and glucose insights.",
@@ -155,7 +156,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://glymee.com",
+    canonical: "https://www.glymee.com/",
   },
   icons: {
     icon: [

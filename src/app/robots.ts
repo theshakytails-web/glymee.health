@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/"],
       },
     ],
-    sitemap: "https://glymee.com/sitemap.xml",
+    sitemap: "https://www.glymee.com/sitemap.xml",
   };
 }
