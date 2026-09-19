@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "Glymee Health privacy policy. Learn how we collect, use, and protect your personal health data.",
-  alternates: { canonical: "https://glymee.com/privacy" },
+  alternates: { canonical: "https://www.glymee.com/privacy" },
 };
 
 export default function PrivacyPolicy() {

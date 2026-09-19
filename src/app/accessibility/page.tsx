@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Accessibility",
   description:
     "Glymee Health accessibility statement. Our commitment to making diabetes care accessible to everyone.",
-  alternates: { canonical: "https://glymee.com/accessibility" },
+  alternates: { canonical: "https://www.glymee.com/accessibility" },
 };
 
 export default function Accessibility() {
