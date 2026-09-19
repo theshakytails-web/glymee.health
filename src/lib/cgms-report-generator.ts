@@ -14,6 +14,7 @@ import {
   MUTED,
   MARGIN,
   PAGE_H,
+  PAGE_BOTTOM,
   CONTENT_W,
 } from "./report-pdf-shared";
 
@@ -68,6 +69,10 @@ function ensure(doc: jsPDF, y: number, needed: number): number {
 }
 
 function subheading(doc: jsPDF, text: string, y: number): number {
+  if (y > PAGE_BOTTOM) {
+    doc.addPage();
+    y = 18;
+  }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(...INK);
